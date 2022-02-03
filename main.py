@@ -12,13 +12,13 @@ img = cv2.resize(img, (600, 400))
 """
 img_ref = cv2.imread('./ressources/Cuisine/Reference.jpg')
 img_ref = cv2.resize(img_ref, (600, 400))
-img = cv2.imread('./ressources/Cuisine/IMG_6565.jpg')
+img = cv2.imread('./ressources/Cuisine/IMG_6564.jpg')
 img = cv2.resize(img, (600, 400))
 """
 
 img_ref = cv2.imread('./ressources/Salon/Reference.jpg')
 img_ref = cv2.resize(img_ref, (600, 400))
-img = cv2.imread('./ressources/Salon/IMG_6557.jpg')
+img = cv2.imread('./ressources/Salon/IMG_6560.jpg')
 img = cv2.resize(img, (600, 400))
 
 
@@ -43,18 +43,18 @@ cv2.waitKey(0)
 cv2.destroyAllWindows()
 """
 diff = cv2.GaussianBlur(diff, (3, 3), cv2.BORDER_DEFAULT)
-
+"""
 cv2.imshow("blurred_diff", diff)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
+"""
 # remplacer par adaptative treshold ?
-ret, thresh = cv2.threshold(diff, 80, 255, cv2.THRESH_BINARY)
-
+ret, thresh = cv2.threshold(diff, 75, 255, cv2.THRESH_BINARY)
+"""
 cv2.imshow("thresh", thresh)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
+"""
 thresh = cv2.erode(thresh, np.ones((3, 3), np.uint8))
 thresh = cv2.dilate(thresh, np.ones((9, 9), np.uint8))
 
