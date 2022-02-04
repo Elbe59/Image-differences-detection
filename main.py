@@ -10,8 +10,7 @@ import cv2
 CHAMBRE_REPO = '/Chambre'
 CUISINE_REPO = '/Cuisine'
 SALON_REPO = '/Salon'
-DIM_MASK = (600, 400)
-PX = 10
+DIM_IMG = (600, 400)
 
 
 def imgLoad(repo):
@@ -20,10 +19,10 @@ def imgLoad(repo):
     for im in listdir('./ressources' + repo):
         if im != 'Reference.JPG':
             img_list.append([im, cv2.imread('./ressources' + repo + '/' + im)])
-            img_list[-1][1] = cv2.resize(img_list[-1][1], DIM_MASK)
+            img_list[-1][1] = cv2.resize(img_list[-1][1], DIM_IMG)
 
     img_ref = cv2.imread('./ressources' + repo + '/Reference.jpg')
-    img_ref = cv2.resize(img_ref, DIM_MASK)
+    img_ref = cv2.resize(img_ref, DIM_IMG)
 
     return img_list, img_ref
 
@@ -88,7 +87,7 @@ def drawBoundingBoxes(img, img_ref):
 
 
 def main():
-    repo = CHAMBRE_REPO
+    repo = SALON_REPO
     img_list, img_ref = imgLoad(repo)
     for img in img_list:
         final_img = [img[0], drawBoundingBoxes(img[1], img_ref)]
