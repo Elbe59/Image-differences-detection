@@ -12,7 +12,6 @@ CUISINE_REPO = '/Cuisine'
 SALON_REPO = '/Salon'
 DIM_IMG = (600, 400)
 
-
 def imgLoad(repo):
     img_list = []
 
