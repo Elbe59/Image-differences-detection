@@ -10,9 +10,8 @@ import cv2
 CHAMBRE_REPO = '/Chambre'
 CUISINE_REPO = '/Cuisine'
 SALON_REPO = '/Salon'
-EXP_RATIO = 0.2
 DIM_MASK = (600, 400)
-K = 0.1
+PX = 10
 
 
 def imgLoad(repo):
@@ -74,10 +73,10 @@ def drawBoundingBoxes(img, img_ref):
     """
 
     # bounding boxes
-    contours = cv2.findContours(final_thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
+    edges = cv2.findContours(final_thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
 
-    for i in range(len(contours)):
-        x, y, w, h = cv2.boundingRect(contours[i])
+    for i in range(len(edges)):
+        x, y, w, h = cv2.boundingRect(edges[i])
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 3)
 
     # affichage img finale
