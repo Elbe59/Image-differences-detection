@@ -12,7 +12,6 @@ SALON_REPO = '/Salon'
 DIM_IMG = (600, 400)
 PX = 0
 
-
 def imgLoad(repo):
     img_list = []
 
@@ -52,6 +51,14 @@ def isOverlapping(cbb, bb):
         return True
     if bb[0]-PX <= cbb[2] <= bb[2]+PX and bb[1]-PX <= cbb[3] <= bb[3]+PX:
         return True
+    if cbb[0]-PX <= bb[0] <= cbb[2]+PX and cbb[1]-PX <= bb[1] <= cbb[3]+PX:
+        return True
+    if cbb[0]-PX <= bb[2] <= cbb[2]+PX and cbb[1]-PX <= bb[1] <= cbb[3]+PX:
+        return True
+    if cbb[0]-PX <= bb[0] <= cbb[2]+PX and cbb[1]-PX <= bb[3] <= cbb[3]+PX:
+        return True
+    if cbb[0]-PX <= bb[2] <= cbb[2]+PX and cbb[1]-PX <= bb[3] <= cbb[3]+PX:
+        return True
     else:
         return False
 
@@ -68,16 +75,16 @@ def threshMask(img, img_ref):
     abs_diff = cv2.absdiff(img_ref_grey, img_grey)
 
     # Gaussian Blur
-    struct_diff = cv2.GaussianBlur(struct_diff, (7, 7), cv2.BORDER_DEFAULT)
+    struct_diff = cv2.GaussianBlur(struct_diff, (3, 3), cv2.BORDER_DEFAULT)
     abs_diff = cv2.GaussianBlur(abs_diff, (3, 3), cv2.BORDER_DEFAULT)
 
     # Threshold
     struct_thresh = cv2.threshold(struct_diff, 50, 255, cv2.THRESH_BINARY_INV)[1]
-    abs_thresh = cv2.threshold(abs_diff, 60, 255, cv2.THRESH_BINARY)[1]
+    abs_thresh = cv2.threshold(abs_diff, 50, 255, cv2.THRESH_BINARY)[1]
 
     # erode/dilate
-    struct_thresh = cv2.dilate(struct_thresh, np.ones((9, 9), np.uint8))
     struct_thresh = cv2.erode(struct_thresh, np.ones((3, 3), np.uint8))
+    struct_thresh = cv2.dilate(struct_thresh, np.ones((9, 9), np.uint8))
 
     abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
     abs_thresh = cv2.dilate(abs_thresh, np.ones((9, 9), np.uint8))
@@ -89,11 +96,10 @@ def threshMask(img, img_ref):
     """
     cv2.imshow("struct_thresh", struct_thresh)
     cv2.imshow("abs_thresh", abs_thresh)
-    """
     cv2.imshow("thresh comparison", final_thresh)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
+    """
     return final_thresh
 
 
@@ -106,7 +112,6 @@ def makeBoundingBoxes(thresh):
         x, y, w, h = cv2.boundingRect(edges[i])
         bb_array.append([x, y, x+w, y+h])
 
-    sortBoundingBoxes(bb_array)
     sortBoundingBoxes(bb_array)
     #print(bb_array)
 
@@ -129,7 +134,7 @@ def drawBoundingBoxes(img, bb_array):
 
 
 def main():
-    repo = SALON_REPO
+    repo = CHAMBRE_REPO
     img_list, img_ref = imgLoad(repo)
     for img in img_list:
         thresh = threshMask(img[1], img_ref)
