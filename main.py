@@ -75,11 +75,11 @@ def threshMask(img, img_ref):
     abs_diff = cv2.absdiff(img_ref_grey, img_grey)
 
     # Gaussian Blur
-    struct_diff = cv2.GaussianBlur(struct_diff, (3, 3), cv2.BORDER_DEFAULT)
+    struct_diff = cv2.GaussianBlur(struct_diff, (3, 3), cv2.BORDER_DEFAULT) # à mettre avant diff?
     abs_diff = cv2.GaussianBlur(abs_diff, (3, 3), cv2.BORDER_DEFAULT)
 
     # Threshold
-    struct_thresh = cv2.threshold(struct_diff, 50, 255, cv2.THRESH_BINARY_INV)[1]
+    struct_thresh = cv2.threshold(struct_diff, 50, 255, cv2.THRESH_BINARY_INV)[1] # adaptiveThreshold
     abs_thresh = cv2.threshold(abs_diff, 50, 255, cv2.THRESH_BINARY)[1]
 
     # erode/dilate
@@ -134,7 +134,7 @@ def drawBoundingBoxes(img, bb_array):
 
 
 def main():
-    repo = CHAMBRE_REPO
+    repo = SALON_REPO
     img_list, img_ref = imgLoad(repo)
     for img in img_list:
         thresh = threshMask(img[1], img_ref)
