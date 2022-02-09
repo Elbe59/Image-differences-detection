@@ -15,9 +15,10 @@ img1 = cv2.imread(os.path.abspath(args.image1))
 img2 = cv2.imread(os.path.abspath(args.image2))
 
 # Process
-diff = cv2.absdiff(img1, img2)
-gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-blur = cv2.GaussianBlur(gray, (5, 5), 0)
+gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+diff = cv2.absdiff(gray1, gray2)
+blur = cv2.GaussianBlur(diff, (5, 5), 0)
 _, thresh = cv2.threshold(blur, 100, 255, cv2.THRESH_BINARY)
 kernel = np.ones((5, 5), np.uint8)
 erode = cv2.erode(thresh, kernel, iterations=5)
