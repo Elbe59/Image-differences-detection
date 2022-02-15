@@ -1,6 +1,8 @@
 import math
 import os
 from os import listdir
+
+from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity
 import numpy as np
 import cv2
@@ -11,7 +13,18 @@ CUISINE_REPO = '/Cuisine'
 SALON_REPO = '/Salon'
 DIM_IMG = (600, 400)
 PX = 3  # Value to increase the area of the rectangle
+fig = plt.figure(figsize=(12,6))
+fig.patch.set_facecolor('silver')
 
+def show_img_with_matplotlib(color_img, title, pos):
+    """Shows an image using matplotlib capabilities"""
+    # Convert BGR image to RGB
+    img_RGB = color_img[:, :, ::-1]
+
+    ax = plt.subplot(1, 2, pos)
+    plt.imshow(img_RGB)
+    plt.title(title)
+    plt.axis('off')
 
 def imgLoad(repo):
     img_list = []
@@ -142,9 +155,9 @@ def drawBoundingBoxes(img, bb_array):
         cv2.rectangle(img, (bb[0], bb[1]), (bb[2], bb[3]), (255, 0, 0), 3)
 
     # affichage img finale
-    cv2.imshow("image finale", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("image finale", img)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
 
     return img
 
@@ -157,6 +170,10 @@ def main():
         bb_array = makeBoundingBoxes(thresh)
         final_img = [img[0], drawBoundingBoxes(img[1], bb_array)]
         saveResults(repo, final_img)
+        show_img_with_matplotlib(img_ref, "Original Image", 1)
+        show_img_with_matplotlib(final_img[1], 'RESULT_' + final_img[0], 2)
+        # Show the Figure:
+        plt.show()
 
 
 if __name__ == "__main__":
