@@ -10,7 +10,7 @@ CHAMBRE_REPO = '/Chambre'
 CUISINE_REPO = '/Cuisine'
 SALON_REPO = '/Salon'
 DIM_IMG = (600, 400)
-PX = 0
+PX = 0 # Value to increase the area of the rectangle
 
 def imgLoad(repo):
     img_list = []
@@ -19,7 +19,6 @@ def imgLoad(repo):
         if im != 'Reference.JPG':
             img_list.append([im, cv2.imread('./ressources' + repo + '/' + im)])
             img_list[-1][1] = cv2.resize(img_list[-1][1], DIM_IMG)
-
     img_ref = cv2.imread('./ressources' + repo + '/Reference.jpg')
     img_ref = cv2.resize(img_ref, DIM_IMG)
 
@@ -35,7 +34,7 @@ def saveResults(repo, img):
 def sortBoundingBoxes(bb_array):
     for cbb in bb_array:
         for bb in bb_array:
-            if cbb != bb and isOverlapping(cbb, bb):
+            if cbb != bb and isOverlappingNew(cbb, bb):
                 cbb[0] = min(cbb[0], bb[0])
                 cbb[1] = min(cbb[1], bb[1])
                 cbb[2] = max(cbb[2], bb[2])
@@ -61,6 +60,18 @@ def isOverlapping(cbb, bb):
         return True
     else:
         return False
+
+def isOverlappingNew(boundingBox1, boundingBox2):
+    """
+    If one of the extremity of the first bounding box overlap one of the extremity of the second bounding box, the two bounding boxes are overlapping
+    :param boundingBox1: The first bounding box - Rectangle [x1,y1,x2,y2] with (x1,y1) the coordinates of the left-bottom corner and (x2,y2) the coordinated of the right top corner.
+    :param boundingBox2: The second bounding box - Rectangle [x1,y1,x2,y2] with (x1,y1) the coordinates of the left-bottom corner and (x2,y2) the coordinated of the right top corner.
+    :return: True if the two bounding boxes are overlapping. Else otherwise
+    """
+    if(boundingBox2[0] >= boundingBox1[2]) or (boundingBox2[2] <= boundingBox1[0]) or (boundingBox2[3] <= boundingBox1[1]) or boundingBox2[1] >= boundingBox1[3]:
+        return False
+    else:
+        return True
 
 
 def threshMask(img, img_ref):
