@@ -21,7 +21,7 @@ def show_img_with_matplotlib(color_img, title, pos):
     # Convert BGR image to RGB
     img_RGB = color_img[:, :, ::-1]
 
-    ax = plt.subplot(1, 2, pos)
+    ax = plt.subplot(3, 2, pos)
     plt.imshow(img_RGB)
     plt.title(title)
     plt.axis('off')
@@ -132,6 +132,57 @@ def threshMask(img, img_ref):
     """
     return final_thresh
 
+def adaptative_threshMask(img, img_ref):
+    # RGB -> GREY
+    img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_ref_grey = cv2.cvtColor(img_ref, cv2.COLOR_BGR2GRAY)
+
+    # diff
+    struct_diff = structural_similarity(img_ref_grey, img_grey, full=True)[1]
+    struct_diff = (struct_diff * 255).astype("uint8")
+
+    abs_diff = cv2.absdiff(img_ref_grey, img_grey)
+    # Apply a bilateral filter in order to reduce noise while keeping the edges sharp:
+    struct_diff = cv2.bilateralFilter(struct_diff, 15, 25, 25)
+    abs_diff = cv2.bilateralFilter(struct_diff, 15, 25, 25)
+    """
+    # Gaussian Blur
+    struct_diff = cv2.GaussianBlur(struct_diff, (3, 3), cv2.BORDER_DEFAULT)  # à mettre avant diff?
+    abs_diff = cv2.GaussianBlur(abs_diff, (3, 3), cv2.BORDER_DEFAULT)
+
+    # Threshold
+    struct_thresh = cv2.threshold(struct_diff, 50, 255, cv2.THRESH_BINARY_INV)[1]  # adaptiveThreshold
+    abs_thresh = cv2.threshold(abs_diff, 50, 255, cv2.THRESH_BINARY)[1]
+
+    # erode/dilate
+    struct_thresh = cv2.erode(struct_thresh, np.ones((3, 3), np.uint8))
+    struct_thresh = cv2.dilate(struct_thresh, np.ones((9, 9), np.uint8))
+
+    abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
+    abs_thresh = cv2.dilate(abs_thresh, np.ones((9, 9), np.uint8))
+
+    # thresh comparaison
+    final_thresh = np.bitwise_and(struct_thresh, abs_thresh)
+    """
+
+    # Threshold
+    struct_thresh = cv2.adaptiveThreshold(struct_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    abs_thresh = cv2.adaptiveThreshold(abs_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+    # erode/dilate
+    struct_thresh = cv2.erode(struct_thresh, np.ones((3, 3), np.uint8))
+    struct_thresh = cv2.dilate(struct_thresh, np.ones((9, 9), np.uint8))
+
+    abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
+    abs_thresh = cv2.dilate(abs_thresh, np.ones((9, 9), np.uint8))
+
+
+    final_thresh = np.bitwise_and(struct_thresh, abs_thresh)
+
+    # Show the Figure:
+    plt.show()
+    return final_thresh
+
 
 def makeBoundingBoxes(thresh):
     edges = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -158,7 +209,6 @@ def drawBoundingBoxes(img, bb_array):
     #cv2.imshow("image finale", img)
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
-
     return img
 
 
@@ -176,5 +226,7 @@ def main():
         plt.show()
 
 
+
 if __name__ == "__main__":
     main()
+
