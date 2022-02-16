@@ -10,6 +10,7 @@ import cv2
 
 # --- Constantes ---
 PX = 3  # Value to increase the area of the rectangle
+DIM_IMG = (600, 400)
 
 
 def img_load(repo):
@@ -18,25 +19,31 @@ def img_load(repo):
     for im in listdir(repo):
         if im != 'Reference.JPG':
             img_list[im] = cv2.imread(repo + '/' + im)
-            # img_list[im] = cv2.resize(img_list[im], DIM_IMG)
+            img_list[im] = cv2.resize(img_list[im], DIM_IMG)
 
     img_ref = cv2.imread(repo + '/Reference.jpg')
-    # img_ref = cv2.resize(img_ref, DIM_IMG)
+    img_ref = cv2.resize(img_ref, DIM_IMG)
 
     return img_list, img_ref
 
 
 def process(img_ref, img):
-    gray1 = cv2.cvtColor(img_ref, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    diff = cv2.absdiff(gray1, gray2)
-    blur = cv2.GaussianBlur(diff, (5, 5), 0)
-    _, thresh = cv2.threshold(blur, 100, 255, cv2.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
-    erode = cv2.erode(thresh, kernel, iterations=5)
-    dilated = cv2.dilate(erode, kernel, iterations=50)
+    # RGB -> GREY
+    img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_ref_grey = cv2.cvtColor(img_ref, cv2.COLOR_BGR2GRAY)
 
-    return dilated
+    abs_diff = cv2.absdiff(img_ref_grey, img_grey)
+
+    # Gaussian Blur
+    abs_diff = cv2.GaussianBlur(abs_diff, (5, 5), cv2.BORDER_DEFAULT)
+
+    # Threshold
+    abs_thresh = cv2.adaptiveThreshold(abs_diff, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
+
+    abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
+    abs_thresh = cv2.dilate(abs_thresh, np.ones((5, 5), np.uint8))
+
+    return abs_thresh
 
 
 def is_overlapping(bounding_box1, bounding_box2):
@@ -56,11 +63,11 @@ def is_overlapping(bounding_box1, bounding_box2):
         return True
 
 
-def find_contours(img):
+def find_contours(thresh):
     contours = []
-    results, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    edges, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    for contour in results:
+    for contour in edges:
         if cv2.contourArea(contour) < 900:
             continue
 
@@ -75,7 +82,7 @@ def find_contours(img):
                 cbb[2] = max(cbb[2], bb[2])
                 cbb[3] = max(cbb[3], bb[3])
 
-    return contours
+    return cv2.groupRectangles(np.concatenate((contours, contours)), groupThreshold=1, eps=0.2)[0]
 
 
 def main():
@@ -87,16 +94,13 @@ def main():
     img_list, img_ref = img_load(os.path.abspath(args.repo))
 
     for img_name, img in img_list.items():
-        result = process(img_ref, img)
-        # contours, _ = cv2.findContours(result, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        contours = find_contours(result)
+        thresh = process(img_ref, img)
+        contours = find_contours(thresh)
 
         for contour in contours:
             [x, y, w, h] = contour
-            # (x, y, w, h) = cv2.boundingRect(contour)
 
-            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 10)
+            cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
 
         cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
         cv2.imshow(img_name, img)
