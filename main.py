@@ -12,6 +12,7 @@ SALON_REPO = '/Salon'
 DIM_IMG = (600, 400)
 PX = 0
 
+
 def imgLoad(repo):
     img_list = []
 
@@ -25,12 +26,14 @@ def imgLoad(repo):
 
     return img_list, img_ref
 
+# créer labels avec VGG Image Annotator ajouter une fonction pour load les labels
 
 def saveResults(repo, img):
     if not os.path.exists('./results' + repo):
         os.makedirs('./results' + repo)
     cv2.imwrite('./results' + repo + '/' + 'RESULT_' + img[0], img[1])
 
+# modifier sortBB et isOverlapping
 
 def sortBoundingBoxes(bb_array):
     for cbb in bb_array:
@@ -63,7 +66,11 @@ def isOverlapping(cbb, bb):
         return False
 
 
+# rajouter un masque pour chaque piece
+# modifier threshold -> adaptative threshold
+# ajuster coefficients
 def threshMask(img, img_ref):
+
     # RGB -> GREY
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_ref_grey = cv2.cvtColor(img_ref, cv2.COLOR_BGR2GRAY)
@@ -132,6 +139,10 @@ def drawBoundingBoxes(img, bb_array):
 
     return img
 
+# trie des bounding boxes:
+# 1) histo sur chaque composante RGB
+# 2) coeff corrélation sur histo
+# 3) comparaison avec seuil (<7)
 
 def main():
     repo = SALON_REPO
