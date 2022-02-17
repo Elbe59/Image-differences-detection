@@ -11,7 +11,25 @@ import cv2
 # --- Constantes ---
 PX = 3  # Value to increase the area of the rectangle
 DIM_IMG = (600, 400)
+fig = plt.figure(figsize=(12, 6))
+fig.patch.set_facecolor('silver')
 
+
+def show_img_with_matplotlib(color_img, title, pos):
+    """Shows an image using matplotlib capabilities"""
+    # Convert BGR image to RGB
+    img_rgb = color_img[:, :, ::-1]
+    ax = plt.subplot(1, 2, pos)
+    plt.imshow(img_rgb)
+    plt.title(title)
+    plt.axis('off')
+
+def save_results(repo, img_name,img):
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
+    if not os.path.exists('./output/' + repo):
+        os.makedirs('./output/' + repo)
+    cv2.imwrite('./output/' + repo + '/' + 'RESULT_' + img_name, img)
 
 def img_load(repo):
     img_list = {}
@@ -42,7 +60,6 @@ def process(img_ref, img):
 
     abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
     abs_thresh = cv2.dilate(abs_thresh, np.ones((5, 5), np.uint8))
-
     return abs_thresh
 
 
@@ -84,6 +101,11 @@ def find_contours(thresh):
 
     return cv2.groupRectangles(np.concatenate((contours, contours)), groupThreshold=1, eps=0.2)[0]
 
+def save_image(img,repository):
+    if not os.path.exists('./output' + repository):
+        os.makedirs('./output' + repository)
+    cv2.imwrite('./output' + repository + '/' + 'RESULT_' + img[0], img[1])
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -101,9 +123,14 @@ def main():
             [x, y, w, h] = contour
 
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
+        save_results(args.repo,img_name,img)
+        show_img_with_matplotlib(img_ref, "Original Image", 1)
+        show_img_with_matplotlib(img, 'RESULT_' + img_name, 2)
+        # Show the Figure:
+        plt.show()
 
-        cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
-        cv2.imshow(img_name, img)
+        # cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
+        # cv2.imshow(img_name, img)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
