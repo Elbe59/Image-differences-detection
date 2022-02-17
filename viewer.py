@@ -14,6 +14,7 @@ image_list = []
 result_img = ""
 original_img = ""
 image_ref= ""
+legende = ""
 #root.geometry("1200x800")
 
 # my_img1 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6567.JPG").resize((600,400), Image.ANTIALIAS))
@@ -38,15 +39,12 @@ image_ref= ""
 #
 def add_original_image(adress):
     global image_ref
-    image_ref = ImageTk.PhotoImage(Image.open(adress).resize((600, 400), Image.ANTIALIAS))
-
+    image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
 
 
 def add_results_image(adress,image_name,confusion_matrix):
-    print(adress)
-
-    my_img = ImageTk.PhotoImage(Image.open(adress).resize((600, 400), Image.ANTIALIAS))
     global image_list
+    my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
     image_list.append({"adress":adress,"image_name":image_name,"image":my_img,"confusion_matrix":confusion_matrix})
 
 
@@ -56,7 +54,7 @@ def flatten(t):
 
 def show_confusion_matrix(cf_matrix):
     #https://www.stackvidhya.com/plot-confusion-matrix-in-python-and-why/
-    fig = plt.figure(figsize=(4,4),dpi=60)
+    fig = plt.figure(figsize=(4,4),dpi=70)
     #cf_matrix = [[73,7],[7,141]]
 
     group_names = ['True Neg', 'False Pos', 'False Neg', 'True Pos']
@@ -130,6 +128,10 @@ button_back.grid(row=3, column=0,ipady=5)
 button_exit.grid(row=3, column=2,ipady=5)
 button_forward.grid(row=3, column=4,ipady=5)
 
+box = Label(root,text="Résultats")
+box.grid(row=3, column=1,ipady=5)
+accuracy = Label(box, text="Accuracy")
+
 def display_result_image(image_number):
     global result_img
     # if(result_img != ""):
@@ -139,16 +141,20 @@ def display_result_image(image_number):
     result_img.grid(row=1, column=3, ipady=5)
     label_result = Label(root, text="Result Image :" + image_list[image_number]["image_name"])
     label_result.grid(row=0, column=3, ipady=5)
-    result_img.grid(row=1, column=3, ipady=5)
+    result_img.grid(row=1, column=3, ipady=5,columnspan=2)
 
 
 
 def show_visualization():
     global original_img
+    global legende
     original_img = Label(image=image_ref)
     original_img.grid(row=1, column=1, ipady=5)
     label_original = Label(root, text="Original Image")
     label_original.grid(row=0, column=1, ipady=5)
+    img = ImageTk.PhotoImage(Image.open("./temp/legende.png").resize((150, 100), Image.ANTIALIAS))
+    legende = Label(image=img)
+    legende.grid(row=2, column=4, ipady=5)
     display_result_image(0)
 
     root.mainloop()
