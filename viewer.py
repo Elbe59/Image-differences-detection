@@ -15,6 +15,12 @@ result_img = ""
 original_img = ""
 image_ref= ""
 legende = ""
+button_forward = ""
+button_back = ""
+button_exit = ""
+box_matrice_legende = Label(root)
+box_matrice_legende.grid(row=2,column=3)
+
 #root.geometry("1200x800")
 
 # my_img1 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6567.JPG").resize((600,400), Image.ANTIALIAS))
@@ -42,10 +48,10 @@ def add_original_image(adress):
     image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
 
 
-def add_results_image(adress,image_name,confusion_matrix):
+def add_results_image(adress,image_name,confusion_matrix,data_result):
     global image_list
     my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
-    image_list.append({"adress":adress,"image_name":image_name,"image":my_img,"confusion_matrix":confusion_matrix})
+    image_list.append({"adress":adress,"image_name":image_name,"image":my_img,"confusion_matrix":confusion_matrix,"accuracy":data_result[0],"recall":data_result[1],"precision":data_result[2],"f1_score":data_result[3]})
 
 
 
@@ -83,54 +89,87 @@ def show_confusion_matrix(cf_matrix):
         os.makedirs('./temp/')
     plt.savefig('./temp/confusion_matrix.png')
     img = ImageTk.PhotoImage(Image.open("./temp/confusion_matrix.png"))
-    result_img = Label(image=img)
+    result_img = Label(box_matrice_legende,image=img)
     result_img.image = img  # !!! It is necessary to keep a reference of the image, otherwise the image won't display
-    result_img.grid(row=2, column=3,ipady=5)
+    result_img.grid(row=0, column=0,ipady=5)
     ## Display the visualization of the Confusion Matrix.
     #plt.show()
 
 
 
-def forward(image_number):
-    global button_forward
-    global button_back
-    print(image_number)
-    button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
-    button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
+# def forward(image_number):
+#     global button_forward
+#     global button_back
+#     print(image_number)
+#     button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
+#     button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
+#
+#     if image_number == len(image_list)-1:
+#         button_forward = Button(root, text=">>", state=DISABLED)
+#     display_result_image(image_number)
+#
+#     button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
+#     button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
+#
+#
+# def back(image_number):
+#     global button_forward
+#     global button_back
+#     print(image_number)
+#     button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
+#     button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
+#
+#     if image_number == 0:
+#         button_back = Button(root, text="<<", state=DISABLED)
+#     display_result_image(image_number)
+#     button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
+#     button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
 
-    if image_number == len(image_list)-1:
-        button_forward = Button(root, text=">>", state=DISABLED)
+def navigate_forward_back(image_number):
     display_result_image(image_number)
-
-    button_back.grid(row=3, column=0,ipady=5)
-    button_forward.grid(row=3, column=4,ipady=5)
-
-
-def back(image_number):
+    update_navigation_bar(image_number)
+# button_back = Button(root, text="<<", command=back, state=DISABLED)
+# button_exit = Button(root, text="Exit Program", command=root.quit)
+# button_forward = Button(root, text=">>", command=lambda: forward(1))
+#
+# button_back.grid(row=4, column=0,pady=(0,5),padx=(5,0))
+# button_exit.grid(row=4, column=2,pady=(0,5))
+# button_forward.grid(row=4, column=5,pady=(0,5),padx=(0,5))
+def update_navigation_bar(image_number):
     global button_forward
     global button_back
-    print(image_number)
-    button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
-    button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
-
+    global button_exit
+    button_exit = Button(root, text="Exit Program", command=root.quit)
     if image_number == 0:
         button_back = Button(root, text="<<", state=DISABLED)
-    display_result_image(image_number)
-    button_back.grid(row=3, column=0,ipady=5)
-    button_forward.grid(row=3, column=4,ipady=5)
+    else:
+        button_back = Button(root, text="<<", command=lambda: navigate_forward_back(image_number - 1))
+    if image_number == len(image_list)-1:
+        button_forward = Button(root, text=">>", state=DISABLED)
+    else:
+        button_forward = Button(root, text=">>", command=lambda: navigate_forward_back(image_number + 1))
+    button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
+    button_exit.grid(row=4, column=2, pady=(0, 5))
+    button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
 
 
-button_back = Button(root, text="<<", command=back, state=DISABLED)
-button_exit = Button(root, text="Exit Program", command=root.quit)
-button_forward = Button(root, text=">>", command=lambda: forward(1))
+def display_data_results(image_number):
+    accuracy = image_list[image_number]["accuracy"]
+    recall = image_list[image_number]["recall"]
+    precision = image_list[image_number]["precision"]
+    f1_score = image_list[image_number]["f1_score"]
 
-button_back.grid(row=3, column=0,ipady=5)
-button_exit.grid(row=3, column=2,ipady=5)
-button_forward.grid(row=3, column=4,ipady=5)
-
-box = Label(root,text="Résultats")
-box.grid(row=3, column=1,ipady=5)
-accuracy = Label(box, text="Accuracy")
+    box = Label(root, text="Résultats")
+    box.grid(row=2, column=1, ipadx=0)
+    accuracy = Label(box, text="Accuracy : " + str(accuracy) + "%", font=("Arial", 15))
+    # accuracy, recall, precision, f1_score
+    recall = Label(box, text="Recall : " + str(recall) + "%", font=("Arial", 15))
+    precision = Label(box, text="Precision : " + str(precision) + "%", font=("Arial", 15))
+    f1_score = Label(box, text="f1_score : " + str(f1_score) + "%", font=("Arial", 15))
+    accuracy.grid(row=1, column=0, ipadx=75)
+    recall.grid(row=2, column=0, ipadx=75)
+    precision.grid(row=3, column=0, ipadx=75)
+    f1_score.grid(row=4, column=0, ipadx=75)
 
 def display_result_image(image_number):
     global result_img
@@ -138,10 +177,11 @@ def display_result_image(image_number):
     #     result_img.grid_forget()
     result_img = Label(image=image_list[image_number]["image"])
     show_confusion_matrix(image_list[image_number]["confusion_matrix"])
-    result_img.grid(row=1, column=3, ipady=5)
-    label_result = Label(root, text="Result Image :" + image_list[image_number]["image_name"])
-    label_result.grid(row=0, column=3, ipady=5)
-    result_img.grid(row=1, column=3, ipady=5,columnspan=2)
+    display_data_results(image_number)
+    result_img.grid(row=1, column=3, pady=5)
+    label_result = Label(root, text="Result Image :" + image_list[image_number]["image_name"],font=("Arial",10))
+    label_result.grid(row=0, column=3, pady=5)
+    result_img.grid(row=1, column=3, pady=5)
 
 
 
@@ -149,12 +189,12 @@ def show_visualization():
     global original_img
     global legende
     original_img = Label(image=image_ref)
-    original_img.grid(row=1, column=1, ipady=5)
-    label_original = Label(root, text="Original Image")
-    label_original.grid(row=0, column=1, ipady=5)
+    original_img.grid(row=1, column=1, pady=5)
+    label_original = Label(root, text="Original Image",font=("Arial",10))
+    label_original.grid(row=0, column=1, pady=5)
     img = ImageTk.PhotoImage(Image.open("./temp/legende.png").resize((150, 100), Image.ANTIALIAS))
-    legende = Label(image=img)
-    legende.grid(row=2, column=4, ipady=5)
-    display_result_image(0)
+    legende = Label(box_matrice_legende,image=img)
+    legende.grid(row=0, column=1, ipady=5)
+    navigate_forward_back(0)
 
     root.mainloop()

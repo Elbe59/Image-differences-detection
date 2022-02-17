@@ -127,7 +127,8 @@ def main():
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
         dst = save_results(args.repo,img_name,img)
         cf_matrix = [[73, 7], [7, 141]]
-        viewer.add_results_image(dst,img_name,cf_matrix)
+        data_results = [92,5,33,12]
+        viewer.add_results_image(dst,img_name,cf_matrix,data_results)
     viewer.show_visualization()
 
 
