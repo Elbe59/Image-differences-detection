@@ -30,7 +30,9 @@ def save_results(repo, img_name,img):
     repo = os.path.basename(repo) # Get last folder name
     if not os.path.exists('./output/' + repo):
         os.makedirs('./output/' + repo)
-    cv2.imwrite('./output/' + repo + '/' + 'RESULT_' + img_name, img)
+    adress = './output/' + repo + '/' + 'RESULT_' + img_name
+    cv2.imwrite(adress, img)
+    return adress
 
 def img_load(repo):
     img_list = {}
@@ -42,7 +44,6 @@ def img_load(repo):
 
     img_ref = cv2.imread(repo + '/Reference.jpg')
     img_ref = cv2.resize(img_ref, DIM_IMG)
-
     return img_list, img_ref
 
 
@@ -115,7 +116,7 @@ def main():
     args = parser.parse_args()
 
     img_list, img_ref = img_load(os.path.abspath(args.repo))
-
+    viewer.add_original_image(args.repo + "Reference.JPG")
     for img_name, img in img_list.items():
         thresh = process(img_ref, img)
         contours = find_contours(thresh)
@@ -124,19 +125,10 @@ def main():
             [x, y, w, h] = contour
 
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
-        save_results(args.repo,img_name,img)
-        viewer.add_image(img_name,img)
-        #viewer.show_visualization()
-        show_img_with_matplotlib(img_ref, "Original Image", 1)
-        show_img_with_matplotlib(img, 'RESULT_' + img_name, 2)
-        # Show the Figure:
-        plt.show()
-
-        # cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
-        # cv2.imshow(img_name, img)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        dst = save_results(args.repo,img_name,img)
+        cf_matrix = [[73, 7], [7, 141]]
+        viewer.add_results_image(dst,img_name,cf_matrix)
+    viewer.show_visualization()
 
 
 if __name__ == "__main__":
