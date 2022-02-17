@@ -7,10 +7,11 @@ from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity
 import numpy as np
 import cv2
+import viewer
 
 # --- Constantes ---
 PX = 3  # Value to increase the area of the rectangle
-DIM_IMG = (600, 400)
+DIM_IMG = (900, 600)
 fig = plt.figure(figsize=(12, 6))
 fig.patch.set_facecolor('silver')
 
@@ -124,6 +125,8 @@ def main():
 
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
         save_results(args.repo,img_name,img)
+        viewer.add_image(img_name,img)
+        #viewer.show_visualization()
         show_img_with_matplotlib(img_ref, "Original Image", 1)
         show_img_with_matplotlib(img, 'RESULT_' + img_name, 2)
         # Show the Figure:
