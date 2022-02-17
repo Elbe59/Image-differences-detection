@@ -1,10 +1,6 @@
-import argparse
 import math
-import os
 from os import listdir
 
-from matplotlib import pyplot as plt
-from skimage.metrics import structural_similarity
 import numpy as np
 import cv2
 import pandas as pd
@@ -40,7 +36,8 @@ def labels_load(repo):
             labels[df["filename"][i]] = []
         bb = json.loads(df["region_shape_attributes"][i].replace('""', '"'))
         labels[df["filename"][i]].append([math.floor(bb["x"] / RESIZE_FACTOR), math.floor(bb["y"] / RESIZE_FACTOR),
-                                          math.floor(bb["width"] / RESIZE_FACTOR), math.floor(bb["height"] / RESIZE_FACTOR)])
+                                          math.floor(bb["width"] / RESIZE_FACTOR),
+                                          math.floor(bb["height"] / RESIZE_FACTOR)])
 
     # floor coordinates
     coord = json.loads(df["region_shape_attributes"][len(df.index) - 1].replace('""', '"'))
@@ -74,11 +71,9 @@ def process(img_ref, img, floor_coord):
     abs_thresh = cv2.dilate(abs_thresh, np.ones((3, 3), np.uint8))
     abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
 
-
     cv2.imshow("test", abs_thresh)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
 
     return abs_thresh
 
@@ -122,6 +117,41 @@ def find_contours(thresh):
     return cv2.groupRectangles(np.concatenate((contours, contours)), groupThreshold=1, eps=0.1)[0]
 
 
+def get_metric(img1, img2, channel) -> float:
+    # Find frequency of pixels in range between 0 and 256
+    hist1 = cv2.calcHist([img1], [channel], None, [256], [0, 256])
+    hist2 = cv2.calcHist([img2], [channel], None, [256], [0, 256])
+
+    # Calculate histograms and normalize it
+    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
+    cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
+
+    return cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+
+
+def filter_contours(img_ref, img, contours):
+    filtered = []
+
+    for contour in contours:
+        [x, y, w, h] = contour
+
+        # Crop images
+        img1 = img_ref[y: h, x: w]
+        img2 = img[y: h, x: w]
+
+        # Calculate metrics for BGR
+        metric_b = get_metric(img1, img2, 0)
+        metric_g = get_metric(img1, img2, 1)
+        metric_r = get_metric(img1, img2, 2)
+
+        metric = (metric_b + metric_g + metric_r) / 3
+
+        if metric < 0.8:
+            filtered.append(contours)
+
+    return filtered
+
+
 def main():
     """
     parser = argparse.ArgumentParser()
@@ -139,6 +169,7 @@ def main():
     for img_name, img in img_list.items():
         thresh = process(img_ref, img, floor_coord)
         contours = find_contours(thresh)
+        contours = filter_contours(img_ref, img, contours)
 
         for contour in contours:
             [x, y, w, h] = contour
@@ -151,6 +182,7 @@ def main():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         """
+
 
 if __name__ == "__main__":
     main()
