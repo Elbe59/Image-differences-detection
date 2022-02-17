@@ -16,6 +16,13 @@ iou = bops.box_iou(box1, box2)
 print(iou.item())
 """
 
+def isOverlapping(bb1, bb2, seuil):
+    rec1 = [bb1[0], bb1[1], bb1[0] + bb1[2], bb1[1] + bb1[3]]
+    rec2 = [bb2[0], bb2[1], bb2[0] + bb2[2], bb2[1] + bb2[3]]
+    if bops.box_iou(torch.tensor([rec1]), torch.tensor([rec2])).item() > seuil:
+        return True
+    else:
+        return False
 
 def confusion_matrix(bb, lb):
     seuil = 0.5
@@ -24,9 +31,7 @@ def confusion_matrix(bb, lb):
 
     for i in range(len(bb)):
         for j in range(len(lb)):
-            rec1 = [bb[i][0], bb[i][1], bb[i][0] + bb[i][2], bb[i][1] + bb[i][3]]
-            rec2 = [lb[i][0], lb[i][1], lb[i][0] + lb[i][2], lb[i][1] + lb[i][3]]
-            if bops.box_iou(torch.tensor([rec1]), torch.tensor([rec2])).item() > seuil:
+            if isOverlapping(bb[i], lb[j], seuil):
                 bb_count[i] = True
                 lb_count[i] = True
 
