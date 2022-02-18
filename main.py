@@ -60,7 +60,7 @@ def process(img_ref, img, floor_coord):
     abs_diff = cv2.GaussianBlur(abs_diff, (7, 7), cv2.BORDER_DEFAULT)
 
     # Threshold
-    abs_thresh = cv2.adaptiveThreshold(abs_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 9, 2)
+    abs_thresh = cv2.adaptiveThreshold(abs_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 3)
 
     # Floor Mask
     contour = np.array(floor_coord)
@@ -100,7 +100,7 @@ def find_contours(thresh):
     edges, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in edges:
-        if cv2.contourArea(contour) < 900:
+        if cv2.contourArea(contour) < 70:
             continue
 
         (x, y, w, h) = cv2.boundingRect(contour)
@@ -146,8 +146,8 @@ def filter_contours(img_ref, img, contours):
 
         metric = (metric_b + metric_g + metric_r) / 3
 
-        if metric < 0.8:
-            filtered.append(contours)
+        if metric < 0.95:
+            filtered.append(contour)
 
     return filtered
 
@@ -162,7 +162,7 @@ def main():
     img_list, img_ref = img_load(os.path.abspath(args.repo))
     """
 
-    repo = 'Chambre'
+    repo = 'Salon'
     img_list, img_ref = img_load(repo)
     labels, floor_coord = labels_load(repo)
 
@@ -176,12 +176,11 @@ def main():
 
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
 
-        """
-        #cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
+        cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
         cv2.imshow(img_name, img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        """
+
 
 
 if __name__ == "__main__":
