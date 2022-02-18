@@ -8,21 +8,19 @@ import json
 import torch
 import torchvision.ops.boxes as bops
 
-"""
-box1 = torch.tensor([[511, 41, 577, 76]])
-box2 = torch.tensor([[544, 59, 610, 94]])
-iou = bops.box_iou(box1, box2)
 
-print(iou.item())
-"""
+a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+print(a[2:5])
 
+"""
 def isOverlapping(bb1, bb2, seuil):
-    rec1 = [bb1[0], bb1[1], bb1[0] + bb1[2], bb1[1] + bb1[3]]
-    rec2 = [bb2[0], bb2[1], bb2[0] + bb2[2], bb2[1] + bb2[3]]
-    if bops.box_iou(torch.tensor([rec1]), torch.tensor([rec2])).item() > seuil:
+    if bops.box_iou(torch.tensor([bb1]), torch.tensor([bb2])).item() > seuil:
         return True
     else:
         return False
+
+print(isOverlapping([5, 5, 10, 10], [12, 12, 20, 20], 0))
+
 
 def confusion_matrix(bb, lb):
     seuil = 0.5
@@ -50,6 +48,7 @@ def calc_metrics(tp, fp, fn, nb_predict):
     f1_score = (2 * precision * recall) / (precision + recall)
     return accuracy, recall, precision, f1_score
 
+
 bb = [[0, 0, 10, 10], [20, 0, 5, 5]]
 lb = [[0, 0, 8, 8], [0, 20, 5, 5]]
 tp, fp, fn, nb_predict = confusion_matrix(bb, lb)
@@ -63,7 +62,7 @@ print("accuracy = ", accuracy)
 print("recall = ", recall)
 print("precision = ", precision)
 print("f1_score = ", f1_score)
-
+"""
 
 
 

@@ -22,10 +22,12 @@ def show_img_with_matplotlib(color_img, title, pos):
     # Convert BGR image to RGB
     img_rgb = color_img[:, :, ::-1]
 
+    """
     ax = plt.subplot(1, 2, pos)
     plt.imshow(img_rgb)
     plt.title(title)
     plt.axis('off')
+    """
 
 
 def img_load(repo):
@@ -146,9 +148,11 @@ def adaptative_threshMask(img, img_ref):
     struct_diff = (struct_diff * 255).astype("uint8")
 
     abs_diff = cv2.absdiff(img_ref_grey, img_grey)
+
     # Apply a bilateral filter in order to reduce noise while keeping the edges sharp:
-    struct_diff = cv2.bilateralFilter(struct_diff, 15, 25, 25)
-    abs_diff = cv2.bilateralFilter(struct_diff, 15, 25, 25)
+    struct_diff = cv2.bilateralFilter(struct_diff, 10, 50, 50)
+    abs_diff = cv2.bilateralFilter(abs_diff, 25, 80, 80)
+
     """
     # Gaussian Blur
     struct_diff = cv2.GaussianBlur(struct_diff, (3, 3), cv2.BORDER_DEFAULT)  # à mettre avant diff?
@@ -170,20 +174,25 @@ def adaptative_threshMask(img, img_ref):
     """
 
     # Threshold
-    struct_thresh = cv2.adaptiveThreshold(struct_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-    abs_thresh = cv2.adaptiveThreshold(abs_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    #struct_thresh = cv2.adaptiveThreshold(struct_diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+    struct_thresh = cv2.threshold(struct_diff, 80, 255, cv2.THRESH_BINARY_INV)[1]  # adaptiveThreshold
+    abs_thresh = cv2.threshold(abs_diff, 20, 255, cv2.THRESH_BINARY)[1]
 
     # erode/dilate
+    struct_thresh = cv2.dilate(struct_thresh, np.ones((3, 3), np.uint8)) # ou (7, 7)
     struct_thresh = cv2.erode(struct_thresh, np.ones((3, 3), np.uint8))
-    struct_thresh = cv2.dilate(struct_thresh, np.ones((9, 9), np.uint8))
 
-    abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
-    abs_thresh = cv2.dilate(abs_thresh, np.ones((9, 9), np.uint8))
+    #abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
+    #abs_thresh = cv2.dilate(abs_thresh, np.ones((3, 3), np.uint8))
 
     final_thresh = np.bitwise_and(struct_thresh, abs_thresh)
 
+    cv2.imshow("test", final_thresh)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     # Show the Figure:
-    plt.show()
+    #plt.show()
     return final_thresh
 
 
@@ -194,7 +203,7 @@ def makeBoundingBoxes(thresh):
     for i in range(len(edges)):
         x, y, w, h = cv2.boundingRect(edges[i])
         bb_array.append([x, y, x + w, y + h])
-    print(bb_array)
+    # print(bb_array)
     sortBoundingBoxes(bb_array)
     # print(bb_array)
 
@@ -216,18 +225,19 @@ def drawBoundingBoxes(img, bb_array):
 
 
 def main():
-    repo = SALON_REPO
+    repo = CUISINE_REPO
     img_list, img_ref = img_load(repo)
     for img in img_list:
-        thresh = threshMask(img[1], img_ref)
+        thresh = adaptative_threshMask(img[1], img_ref)
         bb_array = makeBoundingBoxes(thresh)
         final_img = [img[0], drawBoundingBoxes(img[1], bb_array)]
         save_results(repo, final_img)
+        """
         show_img_with_matplotlib(img_ref, "Original Image", 1)
         show_img_with_matplotlib(final_img[1], 'RESULT_' + final_img[0], 2)
         # Show the Figure:
         plt.show()
-
+        """
 
 if __name__ == "__main__":
     main()
