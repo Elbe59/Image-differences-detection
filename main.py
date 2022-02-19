@@ -8,6 +8,7 @@ import cv2
 import pandas as pd
 import json
 import viewer
+
 # --- Constantes ---
 PX = 3  # Value to increase the area of the rectangle
 RESIZE_FACTOR = 10
@@ -17,7 +18,7 @@ DIM_IMG = (600, 400)
 def img_load(repo):
     img_list = {}
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
     for img in listdir('./ressources/' + repo):
         if img != 'Reference.JPG':
             img_list[img] = cv2.imread('./ressources/' + repo + '/' + img)
@@ -31,7 +32,7 @@ def img_load(repo):
 
 def labels_load(repo):
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
     df = pd.read_csv('./ressources/Labels/' + repo + '_labels.csv')
     labels = {}
 
@@ -153,9 +154,10 @@ def filter_contours(img_ref, img, contours):
 
     return filtered
 
-def save_results(repo, img_name,img):
+
+def save_results(repo, img_name, img):
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
     if not os.path.exists('./output/' + repo):
         os.makedirs('./output/' + repo)
     adress = './output/' + repo + '/' + 'RESULT_' + img_name
@@ -190,12 +192,11 @@ def main():
         # cv2.imshow(img_name, img)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-        dst = save_results(args.repo,img_name,img)
+        dst = save_results(args.repo, img_name, img)
         cf_matrix = [[73, 7], [7, 141]]
-        data_results = [92,5,33,12]
-        viewer.add_results_image(dst,img_name,cf_matrix,data_results)
+        data_results = [92, 5, 33, 12]
+        viewer.add_results_image(dst, img_name, cf_matrix, data_results)
     viewer.show_visualization()
-
 
 
 if __name__ == "__main__":

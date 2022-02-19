@@ -11,29 +11,23 @@ import torchvision.ops.boxes as bops
 import viewer
 import argparse
 
-
 # --- Constantes ---
-CHAMBRE_REPO = 'Chambre'
-CUISINE_REPO = 'Cuisine'
-SALON_REPO = 'Salon'
 DIM_IMG = (600, 400)
 RESIZE_FACTOR = 10
-SEUIL_BB_SIZE = 400
+SEUIL_BB_SIZE = 300
 SEUIL_IOU = 0.5
 SEUIL_CROSSCORR = 0.8
-PX = 0
 
 
 def img_load(repo):
     """
     Description
-    :param
-    :return:
     """
 
     img_list = {}
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
+
     for img in listdir('./ressources/' + repo):
         if img != 'Reference.JPG':
             img_list[img] = cv2.imread('./ressources/' + repo + '/' + img)
@@ -48,11 +42,10 @@ def img_load(repo):
 def labels_load(repo):
     """
     Description
-    :param
-    :return:
     """
+
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
     df = pd.read_csv('./ressources/Labels/' + repo + '_labels.csv')
     labels = {}
 
@@ -60,6 +53,7 @@ def labels_load(repo):
     for i in range(len(df.index) - 1):
         if not df["filename"][i] in labels:
             labels[df["filename"][i]] = []
+
         bb = json.loads(df["region_shape_attributes"][i].replace('""', '"'))
         labels[df["filename"][i]].append([resize(bb["x"]), resize(bb["y"]), resize(bb["width"]), resize(bb["height"])])
 
@@ -74,8 +68,6 @@ def labels_load(repo):
 def resize(coord):
     """
     Description
-    :param
-    :return:
     """
 
     return math.floor(coord / RESIZE_FACTOR)
@@ -84,37 +76,31 @@ def resize(coord):
 def save_results(repo, img_name, img):
     """
     Description
-    :param
-    :return:
     """
 
     repo = os.path.abspath(repo)
-    repo = os.path.basename(repo) # Get last folder name
+    repo = os.path.basename(repo)  # Get last folder name
+
     if not os.path.exists('./results/' + repo):
         os.makedirs('./results/' + repo)
+
     path = './results/' + repo + '/' + 'RESULT_' + img_name
     cv2.imwrite(path, img)
-    return path
 
+    return path
 
 
 def is_overlapping(bb1, bb2, seuil):
     """
     Description
-    :param
-    :return:
     """
-    if bops.box_iou(torch.tensor([bb1]), torch.tensor([bb2])).item() > seuil:
-        return True
-    else:
-        return False
+
+    return bops.box_iou(torch.tensor([bb1]), torch.tensor([bb2])).item() > seuil
 
 
 def sort_overlapping_bb(bb_array):
     """
     Description
-    :param
-    :return:
     """
 
     sorted_bb_array = []
@@ -127,7 +113,6 @@ def sort_overlapping_bb(bb_array):
                 cbb[2] = max(cbb[2], bb[2])
                 cbb[3] = max(cbb[3], bb[3])
 
-
     for cbb in bb_array:
         if cbb not in sorted_bb_array:
             sorted_bb_array.append(cbb)
@@ -138,18 +123,17 @@ def sort_overlapping_bb(bb_array):
 def confusion_matrix(bb, lb):
     """
     Description
-    :param
-    :return:
     """
 
     bb_count = [False] * len(bb)
     lb_count = [False] * len(lb)
 
     for i in range(len(bb)):
-        for j in range(len(lb)):
-            if is_overlapping(bb[i], lb[j], SEUIL_IOU):
-                bb_count[i] = True
-                lb_count[i] = True
+        for _, items in lb.items():
+            for k in items:
+                if is_overlapping(bb[i], k, SEUIL_IOU):
+                    bb_count[i] = True
+                    lb_count[i] = True
 
     nb_predict = len(bb)
     tp = sum(bb_count)
@@ -162,22 +146,20 @@ def confusion_matrix(bb, lb):
 def calc_metrics(tp, fp, fn, nb_predict):
     """
     Description
-    :param
-    :return:
     """
 
     accuracy = tp / nb_predict
     recall = tp / (tp + fn)
     precision = tp / (tp + fp)
+
     f1_score = (2 * precision * recall) / (precision + recall)
+
     return accuracy, recall, precision, f1_score
 
 
 def process(img, img_ref, floor_coord):
     """
     Description
-    :param
-    :return:
     """
 
     # RGB -> GREY
@@ -199,8 +181,8 @@ def process(img, img_ref, floor_coord):
     abs_thresh = cv2.threshold(abs_diff, 20, 255, cv2.THRESH_BINARY)[1]
 
     # erode/dilate
-    struct_thresh = cv2.dilate(struct_thresh, np.ones((3, 3), np.uint8))
-    struct_thresh = cv2.erode(struct_thresh, np.ones((3, 3), np.uint8))
+    struct_thresh = cv2.dilate(struct_thresh, np.ones((2, 2), np.uint8))
+    struct_thresh = cv2.erode(struct_thresh, np.ones((2, 2), np.uint8))
 
     # bitwise and
     final_thresh = np.bitwise_and(struct_thresh, abs_thresh)
@@ -211,26 +193,16 @@ def process(img, img_ref, floor_coord):
     cv2.fillPoly(floor_mask, pts=[contours], color=(255, 255, 255))
     final_thresh = cv2.bitwise_and(final_thresh, final_thresh, mask=floor_mask)
 
-    # display
-    """
-    cv2.imshow("test", final_thresh)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
-
     return final_thresh
 
 
 def find_contours(thresh):
     """
     Description
-    :param
-    :return:
     """
 
     contours = []
     edges, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
 
     for contour in edges:
         if cv2.contourArea(contour) < SEUIL_BB_SIZE:
@@ -249,8 +221,6 @@ def find_contours(thresh):
 def cross_corr_hist(img1, img2, channel) -> float:
     """
     Description
-    :param
-    :return:
     """
 
     # Find frequency of pixels in range between 0 and 256
@@ -267,8 +237,6 @@ def cross_corr_hist(img1, img2, channel) -> float:
 def filter_contours(img_ref, img, contours):
     """
     Description
-    :param
-    :return:
     """
 
     filtered = []
@@ -293,11 +261,9 @@ def filter_contours(img_ref, img, contours):
     return filtered
 
 
-def draw_bb(img, bb_array): # à modifier
+def draw_bb(img, bb_array):  # à modifier
     """
     Description
-    :param
-    :return:
     """
 
     for bb in bb_array:
@@ -309,50 +275,38 @@ def draw_bb(img, bb_array): # à modifier
 def main():
     """
     Description
-    :param
-    :return:
     """
 
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("repo", help="The path of repository folder")
+    parser.add_argument("repo", help="The path of repository folder. Ex: ressources/Chambre/")
     args = parser.parse_args()
 
     img_list, img_ref = img_load(os.path.abspath(args.repo))
 
-    # repo = 'Cuisine'
-    # img_list, img_ref = img_load(repo)
-    # labels, floor_coord = labels_load(repo)
     labels, floor_coord = labels_load(args.repo)
     viewer.add_original_image(args.repo + "Reference.JPG")
 
     for img_name, img in img_list.items():
         thresh = process(img_ref, img, floor_coord)
         contours = find_contours(thresh)
-        #contours = filter_contours(img_ref, img, contours)
+        # contours = filter_contours(img_ref, img, contours)
 
         for contour in contours:
             [x1, y1, x2, y2] = contour
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-            """
-            cv2.imshow(img_name, img)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            """
-
         dst = save_results(args.repo, img_name, img)
 
-        tp, fp, fn, nb_predict = confusion_matrix(bb=contours,lb=labels)
-        accuracy, recall, precision, f1_score = calc_metrics(tp,fp,fn,nb_predict)
+        tp, fp, fn, nb_predict = confusion_matrix(bb=contours, lb=labels)
+        accuracy, recall, precision, f1_score = calc_metrics(tp, fp, fn, nb_predict)
         cf_matrix = [[0, fp], [fn, tp]]
-        data_results = [accuracy,recall,precision,f1_score]
+        data_results = [accuracy, recall, precision, f1_score]
         # cf_matrix = [[73, 7], [7, 141]]
-        # data_results = [92,5,33,12]
-        viewer.add_results_image(dst,img_name,cf_matrix,data_results)
+        # data_results = [92, 5, 33, 12]
+        viewer.add_results_image(dst, img_name, cf_matrix, data_results)
+
     viewer.show_visualization()
 
 
 if __name__ == "__main__":
     main()
-
