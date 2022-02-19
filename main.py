@@ -15,7 +15,7 @@ import argparse
 DIM_IMG = (600, 400)
 RESIZE_FACTOR = 10
 SEUIL_BB_SIZE = 300
-SEUIL_IOU = 0.5
+SEUIL_IOU = 0.05
 SEUIL_CROSSCORR = 0.8
 
 
@@ -135,15 +135,16 @@ def confusion_matrix(bb, lb):
     lb_count = [False] * len(lb)
 
     for i in range(len(bb)):
-        for j in range(len(lb)):
+        for j in range(min(len(bb), len(lb))):
             if is_overlapping(bb[i], lb[j], SEUIL_IOU):
                 bb_count[i] = True
-                lb_count[i] = True
+                lb_count[j] = True
 
-    nb_predict = len(bb)
     tp = sum(bb_count)
     fp = len(bb_count) - sum(bb_count)
     fn = len(lb_count) - sum(lb_count)
+
+    nb_predict = tp + fp + fn
 
     return tp, fp, fn, nb_predict
 
@@ -153,11 +154,22 @@ def calc_metrics(tp, fp, fn, nb_predict):
     Description
     """
 
-    accuracy = tp / nb_predict
-    recall = tp / (tp + fn)
-    precision = tp / (tp + fp)
+    if nb_predict <= 0:
+        return 0, 0, 0, 0
 
-    if precision + recall == 0:
+    accuracy = tp / nb_predict
+
+    if tp + fn <= 0:
+        recall = 0
+    else:
+        recall = tp / (tp + fn)
+
+    if tp + fp <= 0:
+        precision = 0
+    else:
+        precision = tp / (tp + fp)
+
+    if precision + recall <= 0:
         f1_score = 0
     else:
         f1_score = (2 * precision * recall) / (precision + recall)
@@ -213,7 +225,7 @@ def find_contours(thresh):
         contours.append([x, y, x + w, y + h])
 
     for i in range(2):
-        sort_overlapping_bb(contours)
+        contours = sort_overlapping_bb(contours)
 
     return contours
 
@@ -290,6 +302,10 @@ def main():
         thresh = process(img_ref, img, floor_coord)
         contours = find_contours(thresh)
         # contours = filter_contours(img_ref, img, contours)
+
+        for label in labels[img_name]:
+            [x1, y1, x2, y2] = label
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 1)
 
         for contour in contours:
             [x1, y1, x2, y2] = contour
