@@ -1,10 +1,11 @@
 import os
 from tkinter import *
-from PIL import ImageTk, Image
-import seaborn as sns
-from matplotlib import pyplot as plt
-import numpy as np
 from tkinter import messagebox
+
+import numpy as np
+import seaborn as sns
+from PIL import ImageTk, Image
+from matplotlib import pyplot as plt
 
 root = Tk()
 root.title('Results visualization')
@@ -22,11 +23,23 @@ box_matrice_legende.grid(row=2, column=3)
 
 
 def add_original_image(adress):
+    """
+    Description :
+    Cette méthode appelée dans le programme principal permet d'ajouter à l'instance de tkinter
+    l'image de référence du dossier choisi.
+    """
     global image_ref
     image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
 
 
-def add_results_image(adress: str, image_name, confusion_matrix, data_result):
+def add_results_image(adress: str, image_name: str, confusion_matrix, data_result):
+    """
+    Description :
+    Cette méthode appelée dans le programme principal permet d'ajouter à l'instance de tkinter
+    l'image après traitement avec toutes ses informations au niveau de la matrice de confusion et des différentes
+    métriques.
+    Toutes ces données seront stockées dans un dictionnaire et toutes les images sont contenu dans une liste 'list_image'
+    """
     global image_list
     my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
     image_list.append(
@@ -35,10 +48,20 @@ def add_results_image(adress: str, image_name, confusion_matrix, data_result):
 
 
 def flatten(t):
+    """
+    Description :
+    Juste une méthode pour remplacer list.flatten()
+    """
     return [item for sublist in t for item in sublist]
 
 
 def show_confusion_matrix(cf_matrix):
+    """
+    Description :
+    A partir d'une matrice de confusion entrée en paramètre au format [[True Neg,False Pos],[False Neg, True Pos]]
+    cette méthode construit une matrice de confusion grâce à la librairie Seaborn.
+    On affiche alors cette matrice pour chacune des images.
+    """
     plt.figure(figsize=(4, 4), dpi=70)
 
     group_names = ['True Neg', 'False Pos', 'False Neg', 'True Pos']
@@ -76,17 +99,33 @@ def show_confusion_matrix(cf_matrix):
 
 
 def navigate_forward_back(image_number):
+    """
+    Description :
+    Cette méthode permet d'afficher le résultat de l'image traitée ainsi que de mettre
+    à jour de le système de navigation entre les images.
+    """
     global legende
 
-    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize((150, 100), Image.ANTIALIAS))
-    legende = Label(box_matrice_legende, image=img)
+    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize((150, 200), Image.ANTIALIAS))
+    box_legende = Label(box_matrice_legende)
+    box_legende.grid(row=0, column=1, padx=(75, 0))
+
+    legende = Label(box_legende, image=img)
+    text_legende = Label(box_legende, text="Legend \n", font=('Arial', 10))
+    text_legende.grid(row=0, column=0)
     legende.image = img
-    legende.grid(row=0, column=1, ipady=5)
+    legende.grid(row=1, column=0)
     display_result_image(image_number)
     update_navigation_bar(image_number)
 
 
 def update_navigation_bar(image_number):
+    """
+    Description :
+    Mise à jour de la barre de navigation entre les images. Si il s'agit de la première image, image précédente impossible.
+    De même si il s'agit de la dernière image, image suivant impossible.
+    Implémentation d'un bouton exit program ayant le même effet que le fait de fermer la fenêtre => Stop le programme
+    """
     global button_forward
     global button_back
     global button_exit
@@ -111,14 +150,18 @@ def update_navigation_bar(image_number):
 
 
 def display_data_results(image_number):
-    accuracy = image_list[image_number]["accuracy"]
+    """
+    Description :
+    Affiche les différentes métriques de l'image contenu dans list_image à l'index rentré en paramètre.
+    """
+    accuracy = image_list[image_number]['accuracy']
     recall = image_list[image_number]["recall"]
     precision = image_list[image_number]["precision"]
     f1_score = image_list[image_number]["f1_score"]
 
-    box = Label(root, text="Résultats")
+    box = Label(root, text="Results")
     box.grid(row=2, column=1, ipadx=0)
-    titre = Label(box, text="Résultats : \n", font=("Arial", 18))
+    titre = Label(box, text="Results : \n", font=("Arial", 18))
     accuracy = Label(box, text="Accuracy : " + str(accuracy) + "%", font=("Arial", 15))
     # accuracy, recall, precision, f1_score
     recall = Label(box, text="Recall : " + str(recall) + "%", font=("Arial", 15))
@@ -132,6 +175,10 @@ def display_data_results(image_number):
 
 
 def display_result_image(image_number):
+    """
+    Description :
+    Affichage de l'image traitée avec l'apparition des contours.
+    """
     global result_img
 
     result_img = Label(image=image_list[image_number]["image"])
@@ -144,11 +191,20 @@ def display_result_image(image_number):
 
 
 def on_closing():
+    """
+    Description :
+    Stop le programme si la fenêtre est fermée.
+    """
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.quit()
 
 
 def show_visualization():
+    """
+    Description :
+    Méhode principale qui initialise la fenêtre tkinter avec comme affichage la comparaison entre l'image de référence
+    et le résultat de la première image du dossier.
+    """
     global original_img
 
     original_img = Label(image=image_ref)
