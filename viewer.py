@@ -2,10 +2,12 @@ import os
 from tkinter import *
 from PIL import ImageTk, Image
 import seaborn as sns
+from PIL.ImageTk import PhotoImage
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+from tkinter import messagebox
 
 root = Tk()
 root.title('Results visualization')
@@ -49,7 +51,7 @@ def add_original_image(adress):
     image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
 
 
-def add_results_image(adress,image_name,confusion_matrix,data_result):
+def add_results_image(adress: str,image_name,confusion_matrix,data_result):
     global image_list
     my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
     image_list.append({"adress":adress,"image_name":image_name,"image":my_img,"confusion_matrix":confusion_matrix,"accuracy":data_result[0],"recall":data_result[1],"precision":data_result[2],"f1_score":data_result[3]})
@@ -190,6 +192,9 @@ def display_result_image(image_number):
     label_result.grid(row=0, column=3, pady=5)
     result_img.grid(row=1, column=3, pady=5)
 
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.quit()
 
 
 def show_visualization():
@@ -202,5 +207,6 @@ def show_visualization():
     label_original.grid(row=0, column=1, pady=5)
 
     navigate_forward_back(0)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     root.mainloop()
