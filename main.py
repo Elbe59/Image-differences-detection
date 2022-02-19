@@ -16,7 +16,8 @@ DIM_IMG = (600, 400)
 
 def img_load(repo):
     img_list = {}
-
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
     for img in listdir('./ressources/' + repo):
         if img != 'Reference.JPG':
             img_list[img] = cv2.imread('./ressources/' + repo + '/' + img)
@@ -29,6 +30,8 @@ def img_load(repo):
 
 
 def labels_load(repo):
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
     df = pd.read_csv('./ressources/Labels/' + repo + '_labels.csv')
     labels = {}
 
