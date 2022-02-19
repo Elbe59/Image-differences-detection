@@ -106,7 +106,7 @@ def navigate_forward_back(image_number):
     """
     global legende
 
-    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize((150, 200), Image.ANTIALIAS))
+    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize((150, 150), Image.ANTIALIAS))
     box_legende = Label(box_matrice_legende)
     box_legende.grid(row=0, column=1, padx=(75, 0))
 
