@@ -8,7 +8,7 @@ from PIL import ImageTk, Image
 from matplotlib import pyplot as plt
 
 root = Tk()
-root.title('Results visualization')
+root.title('Visualization of results')
 
 image_list = []
 result_img = ""
