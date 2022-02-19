@@ -60,7 +60,6 @@ def flatten(t):
     return [item for sublist in t for item in sublist]
 
 def show_confusion_matrix(cf_matrix):
-    #https://www.stackvidhya.com/plot-confusion-matrix-in-python-and-why/
     fig = plt.figure(figsize=(4,4),dpi=70)
     #cf_matrix = [[73,7],[7,141]]
 

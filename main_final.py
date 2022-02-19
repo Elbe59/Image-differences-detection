@@ -9,6 +9,7 @@ from skimage.metrics import structural_similarity
 import torch
 import torchvision.ops.boxes as bops
 import viewer
+import argparse
 
 
 # --- Constantes ---
@@ -31,7 +32,8 @@ def img_load(repo):
     """
 
     img_list = {}
-
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
     for img in listdir('./ressources/' + repo):
         if img != 'Reference.JPG':
             img_list[img] = cv2.imread('./ressources/' + repo + '/' + img)
@@ -49,7 +51,8 @@ def labels_load(repo):
     :param
     :return:
     """
-
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
     df = pd.read_csv('./ressources/Labels/' + repo + '_labels.csv')
     labels = {}
 
@@ -310,17 +313,18 @@ def main():
     :return:
     """
 
-    """
+
     parser = argparse.ArgumentParser()
     parser.add_argument("repo", help="The path of repository folder")
     args = parser.parse_args()
 
     img_list, img_ref = img_load(os.path.abspath(args.repo))
-    """
 
-    repo = 'Cuisine'
-    img_list, img_ref = img_load(repo)
-    labels, floor_coord = labels_load(repo)
+    # repo = 'Cuisine'
+    # img_list, img_ref = img_load(repo)
+    # labels, floor_coord = labels_load(repo)
+    labels, floor_coord = labels_load(args.repo)
+    viewer.add_original_image(args.repo + "Reference.JPG")
 
     for img_name, img in img_list.items():
         thresh = process(img_ref, img, floor_coord)
@@ -337,10 +341,15 @@ def main():
             cv2.destroyAllWindows()
             """
 
-        dst = save_results(repo, img_name, img)
-        cf_matrix = [[73, 7], [7, 141]]
-        data_results = [92, 5, 33, 12]
-        viewer.add_results_image(dst, img_name, cf_matrix, data_results)
+        dst = save_results(args.repo, img_name, img)
+
+        tp, fp, fn, nb_predict = confusion_matrix(bb=contours,lb=labels)
+        accuracy, recall, precision, f1_score = calc_metrics(tp,fp,fn,nb_predict)
+        cf_matrix = [[0, fp], [fn, tp]]
+        data_results = [accuracy,recall,precision,f1_score]
+        # cf_matrix = [[73, 7], [7, 141]]
+        # data_results = [92,5,33,12]
+        viewer.add_results_image(dst,img_name,cf_matrix,data_results)
     viewer.show_visualization()
 
 
