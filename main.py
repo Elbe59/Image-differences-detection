@@ -15,7 +15,7 @@ import argparse
 DIM_IMG = (600, 400)
 RESIZE_FACTOR = 10
 SEUIL_BB_SIZE = 300
-SEUIL_IOU = 0.05
+SEUIL_IOU = 0
 SEUIL_CROSSCORR = 0.8
 
 
@@ -31,10 +31,10 @@ def img_load(repo):
     for img in listdir('./ressources/' + repo):
         if img != 'Reference.JPG':
             img_list[img] = cv2.imread('./ressources/' + repo + '/' + img)
-            img_list[img] = cv2.resize(img_list[img], DIM_IMG)
+            # img_list[img] = cv2.resize(img_list[img], DIM_IMG)
 
     img_ref = cv2.imread('./ressources/' + repo + '/Reference.jpg')
-    img_ref = cv2.resize(img_ref, DIM_IMG)
+    # img_ref = cv2.resize(img_ref, DIM_IMG)
 
     return img_list, img_ref
 
@@ -56,10 +56,10 @@ def labels_load(repo):
 
         bb = json.loads(df["region_shape_attributes"][i].replace('""', '"'))
 
-        x = resize(bb["x"])
-        y = resize(bb["y"])
-        w = resize(bb["x"] + bb["width"])
-        h = resize(bb["y"] + bb["height"])
+        x = bb["x"]
+        y = bb["y"]
+        w = bb["x"] + bb["width"]
+        h = bb["y"] + bb["height"]
 
         labels[df["filename"][i]].append([x, y, w, h])
 
@@ -77,6 +77,10 @@ def resize(coord):
     """
 
     return math.floor(coord / RESIZE_FACTOR)
+
+
+def resize_up(coord):
+    return math.floor(coord * RESIZE_FACTOR)
 
 
 def save_results(repo, img_name, img):
@@ -113,7 +117,7 @@ def sort_overlapping_bb(bb_array):
 
     for cbb in bb_array:
         for bb in bb_array:
-            if cbb != bb and is_overlapping(cbb, bb, 0.05):
+            if cbb != bb and is_overlapping(cbb, bb, SEUIL_IOU):
                 cbb[0] = min(cbb[0], bb[0])
                 cbb[1] = min(cbb[1], bb[1])
                 cbb[2] = max(cbb[2], bb[2])
@@ -126,7 +130,7 @@ def sort_overlapping_bb(bb_array):
     return sorted_bb_array
 
 
-def confusion_matrix(bb, lb):
+def confusion_matrix(bb, lb, img):
     """
     Description
     """
@@ -134,11 +138,23 @@ def confusion_matrix(bb, lb):
     bb_count = [False] * len(bb)
     lb_count = [False] * len(lb)
 
+    is_visited = []
+
     for i in range(len(bb)):
-        for j in range(min(len(bb), len(lb))):
+        for j in range(max(len(bb), len(lb))):
             if is_overlapping(bb[i], lb[j], SEUIL_IOU):
                 bb_count[i] = True
                 lb_count[j] = True
+
+                [x1, y1, x2, y2] = bb[i]
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), resize_up(2))
+
+                is_visited.append(lb[j])
+
+    for label in lb:
+        if label not in is_visited:
+            [x1, y1, x2, y2] = label
+            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), resize_up(2))
 
     tp = sum(bb_count)
     fp = len(bb_count) - sum(bb_count)
@@ -222,66 +238,12 @@ def find_contours(thresh):
 
         (x, y, w, h) = cv2.boundingRect(contour)
 
-        contours.append([x, y, x + w, y + h])
+        contours.append([resize_up(x), resize_up(y), resize_up(x + w), resize_up(y + h)])
 
     for i in range(2):
         contours = sort_overlapping_bb(contours)
 
     return contours
-
-
-def cross_corr_hist(img1, img2, channel) -> float:
-    """
-    Description
-    """
-
-    # Find frequency of pixels in range between 0 and 256
-    hist1 = cv2.calcHist([img1], [channel], None, [256], [0, 256])
-    hist2 = cv2.calcHist([img2], [channel], None, [256], [0, 256])
-
-    # Calculate histograms and normalize it
-    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
-    cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
-
-    return cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-
-
-def filter_contours(img_ref, img, contours):
-    """
-    Description
-    """
-
-    filtered = []
-
-    for contour in contours:
-        [x1, y1, x2, y2] = contour
-
-        # Crop images
-        img1 = img_ref[x1: x2, y1: y2]
-        img2 = img[x1: x2, y1: y2]
-
-        # Calculate metrics for BGR
-        cch_b = cross_corr_hist(img1, img2, 0)
-        cch_g = cross_corr_hist(img1, img2, 1)
-        cch_r = cross_corr_hist(img1, img2, 2)
-
-        cch_total = (cch_b + cch_g + cch_r) / 3
-
-        if cch_total < SEUIL_CROSSCORR:
-            filtered.append(contours)
-
-    return filtered
-
-
-def draw_bb(img, bb_array):  # à modifier
-    """
-    Description
-    """
-
-    for bb in bb_array:
-        cv2.rectangle(img, (bb[0], bb[1]), (bb[2], bb[3]), (255, 0, 0), 3)
-
-    return img
 
 
 def main():
@@ -299,22 +261,25 @@ def main():
     viewer.add_original_image(args.repo + "Reference.JPG")
 
     for img_name, img in img_list.items():
-        thresh = process(img_ref, img, floor_coord)
+        img_ref_resized = cv2.resize(img_ref, DIM_IMG)
+        img_resized = cv2.resize(img, DIM_IMG)
+
+        thresh = process(img_ref_resized, img_resized, floor_coord)
         contours = find_contours(thresh)
-        # contours = filter_contours(img_ref, img, contours)
 
         for label in labels[img_name]:
             [x1, y1, x2, y2] = label
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 255), 1)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 165, 255), resize_up(1))
 
         for contour in contours:
             [x1, y1, x2, y2] = contour
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), resize_up(2))
+
+        tp, fp, fn, nb_predict = confusion_matrix(bb=contours, lb=labels[img_name], img=img)
+        accuracy, recall, precision, f1_score = calc_metrics(tp, fp, fn, nb_predict)
 
         dst = save_results(args.repo, img_name, img)
 
-        tp, fp, fn, nb_predict = confusion_matrix(bb=contours, lb=labels[img_name])
-        accuracy, recall, precision, f1_score = calc_metrics(tp, fp, fn, nb_predict)
         cf_matrix = [[0, fp], [fn, tp]]
         data_results = [int(accuracy * 100), int(recall * 100), int(precision * 100), int(f1_score * 100)]
         viewer.add_results_image(dst, img_name, cf_matrix, data_results)
