@@ -73,9 +73,9 @@ def process(img_ref, img, floor_coord):
     cv2.fillPoly(floor_mask, pts=[contour], color=(255, 255, 255))
     abs_thresh = cv2.bitwise_and(abs_thresh, abs_thresh, mask=floor_mask)
 
-    abs_thresh = cv2.dilate(abs_thresh, np.ones((3, 3), np.uint8))
-    abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
-    abs_thresh = cv2.dilate(abs_thresh, np.ones((5, 5), np.uint8))
+    # abs_thresh = cv2.dilate(abs_thresh, np.ones((3, 3), np.uint8))
+    # abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
+    # abs_thresh = cv2.dilate(abs_thresh, np.ones((5, 5), np.uint8))
 
     return abs_thresh
 
@@ -148,7 +148,7 @@ def filter_contours(img_ref, img, contours):
 
         metric = (metric_b + metric_g + metric_r) / 3
 
-        if metric < 0.95:
+        if metric < 0.99:
             filtered.append(contour)
 
     return filtered
