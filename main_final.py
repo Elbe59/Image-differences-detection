@@ -167,25 +167,17 @@ def process(img, img_ref, floor_coord):
     img_ref_grey = cv2.cvtColor(img_ref, cv2.COLOR_BGR2GRAY)
 
     # diff
-    struct_diff = structural_similarity(img_ref_grey, img_grey, full=True)[1]
+    _, struct_diff = structural_similarity(img_ref_grey, img_grey, full=True)
     struct_diff = (struct_diff * 255).astype("uint8")
-
-    abs_diff = cv2.absdiff(img_ref_grey, img_grey)
 
     # apply a bilateral filter in order to reduce noise while keeping the edges sharp:
     struct_diff = cv2.bilateralFilter(struct_diff, 10, 50, 50)
-    abs_diff = cv2.bilateralFilter(abs_diff, 25, 80, 80)
 
     # threshold
     struct_thresh = cv2.threshold(struct_diff, 80, 255, cv2.THRESH_BINARY_INV)[1]
-    abs_thresh = cv2.threshold(abs_diff, 20, 255, cv2.THRESH_BINARY)[1]
 
-    # erode/dilate
-    struct_thresh = cv2.dilate(struct_thresh, np.ones((2, 2), np.uint8))
-    struct_thresh = cv2.erode(struct_thresh, np.ones((2, 2), np.uint8))
-
-    # bitwise and
-    final_thresh = np.bitwise_and(struct_thresh, abs_thresh)
+    # dilate
+    final_thresh = cv2.dilate(struct_thresh, np.ones((2, 2), np.uint8))
 
     # floor mask
     contours = np.array(floor_coord)
