@@ -1,11 +1,13 @@
+import argparse
 import math
+import os
 from os import listdir
 
 import numpy as np
 import cv2
 import pandas as pd
 import json
-
+import viewer
 # --- Constantes ---
 PX = 3  # Value to increase the area of the rectangle
 RESIZE_FACTOR = 10
@@ -70,10 +72,7 @@ def process(img_ref, img, floor_coord):
 
     abs_thresh = cv2.dilate(abs_thresh, np.ones((3, 3), np.uint8))
     abs_thresh = cv2.erode(abs_thresh, np.ones((3, 3), np.uint8))
-
-    cv2.imshow("test", abs_thresh)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    abs_thresh = cv2.dilate(abs_thresh, np.ones((5, 5), np.uint8))
 
     return abs_thresh
 
@@ -151,6 +150,11 @@ def filter_contours(img_ref, img, contours):
 
     return filtered
 
+def save_image(img,repository):
+    if not os.path.exists('./output' + repository):
+        os.makedirs('./output' + repository)
+    cv2.imwrite('./output' + repository + '/' + 'RESULT_' + img[0], img[1])
+
 
 def main():
     """
@@ -165,6 +169,7 @@ def main():
     repo = 'Salon'
     img_list, img_ref = img_load(repo)
     labels, floor_coord = labels_load(repo)
+    viewer.add_original_image(args.repo + "Reference.JPG")
 
     for img_name, img in img_list.items():
         thresh = process(img_ref, img, floor_coord)
@@ -176,10 +181,15 @@ def main():
 
             cv2.rectangle(img, (x, y), (w, h), (0, 255, 0), 2)
 
-        cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
-        cv2.imshow(img_name, img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.namedWindow(img_name, cv2.WINDOW_NORMAL)
+        # cv2.imshow(img_name, img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        dst = save_results(args.repo,img_name,img)
+        cf_matrix = [[73, 7], [7, 141]]
+        data_results = [92,5,33,12]
+        viewer.add_results_image(dst,img_name,cf_matrix,data_results)
+    viewer.show_visualization()
 
 
 
