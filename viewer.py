@@ -130,7 +130,7 @@ def show_confusion_matrix(cf_matrix):
 
 def navigate_forward_back(image_number):
     global legende
-    img = ImageTk.PhotoImage(Image.open("./temp/legende.png").resize((150, 100), Image.ANTIALIAS))
+    img = ImageTk.PhotoImage(Image.open("./GUI/legende.png").resize((150, 100), Image.ANTIALIAS))
     legende = Label(box_matrice_legende, image=img)
     legende.image = img
     legende.grid(row=0, column=1, ipady=5)
