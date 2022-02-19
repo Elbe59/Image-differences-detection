@@ -153,25 +153,27 @@ def filter_contours(img_ref, img, contours):
 
     return filtered
 
-def save_image(img,repository):
-    if not os.path.exists('./output' + repository):
-        os.makedirs('./output' + repository)
-    cv2.imwrite('./output' + repository + '/' + 'RESULT_' + img[0], img[1])
+def save_results(repo, img_name,img):
+    repo = os.path.abspath(repo)
+    repo = os.path.basename(repo) # Get last folder name
+    if not os.path.exists('./output/' + repo):
+        os.makedirs('./output/' + repo)
+    adress = './output/' + repo + '/' + 'RESULT_' + img_name
+    cv2.imwrite(adress, img)
+    return adress
 
 
 def main():
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument("repo", help="The path of repository folder")
 
     args = parser.parse_args()
 
     img_list, img_ref = img_load(os.path.abspath(args.repo))
-    """
-
-    repo = 'Salon'
-    img_list, img_ref = img_load(repo)
-    labels, floor_coord = labels_load(repo)
+    #
+    # repo = 'Salon'
+    # img_list, img_ref = img_load(repo)
+    labels, floor_coord = labels_load(args.repo)
     viewer.add_original_image(args.repo + "Reference.JPG")
 
     for img_name, img in img_list.items():
