@@ -46,7 +46,7 @@ def show_confusion_matrix(cf_matrix):
     group_counts = ["{0:0.0f}".format(value) for value in
                     flatten(cf_matrix)]
 
-    group_percentages = ["{0:.2%}".format(value) for value in
+    group_percentages = ["{0:0.0%}".format(value) for value in
                          flatten(cf_matrix) / np.sum(cf_matrix)]
 
     labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
@@ -133,7 +133,7 @@ def display_data_results(image_number):
 
 def display_result_image(image_number):
     global result_img
-    
+
     result_img = Label(image=image_list[image_number]["image"])
     show_confusion_matrix(image_list[image_number]["confusion_matrix"])
     display_data_results(image_number)
