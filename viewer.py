@@ -2,11 +2,8 @@ import os
 from tkinter import *
 from PIL import ImageTk, Image
 import seaborn as sns
-from PIL.ImageTk import PhotoImage
 from matplotlib import pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from tkinter import messagebox
 
 root = Tk()
@@ -24,34 +21,12 @@ box_matrice_legende = Label(root)
 box_matrice_legende.grid(row=2, column=3)
 
 
-# root.geometry("1200x800")
-
-# my_img1 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6567.JPG").resize((600,400), Image.ANTIALIAS))
-# my_img2 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6569.JPG").resize((600,400), Image.ANTIALIAS))
-# my_img3 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6568.JPG").resize((600,400), Image.ANTIALIAS))
-# my_img4 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6567.JPG").resize((600,400), Image.ANTIALIAS))
-# my_img5 = ImageTk.PhotoImage(Image.open("output/Chambre/RESULT_IMG_6570.JPG").resize((600,400), Image.ANTIALIAS))
-# image_list = [my_img1, my_img2, my_img3, my_img4, my_img5]
-# original_img = Label(image=my_img1)
-# result_img = Label(image=my_img2)
-# original_img.grid(row=1, column=0,ipady=5)
-# result_img.grid(row=1, column=1,ipady=5)
-#
-# # Images labels
-# label_original = Label(root,text="Original Image")
-# label_original.grid(row=0,column=0,ipady=5)
-# label_result = Label(root,text="Result Image")
-# label_result.grid(row=0, column=1,ipady=5)
-
-# labelText1.pack()
-
-#
 def add_original_image(adress):
     global image_ref
     image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
 
 
-def add_results_image(adress: str,image_name,confusion_matrix,data_result):
+def add_results_image(adress: str, image_name, confusion_matrix, data_result):
     global image_list
     my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
     image_list.append(
@@ -64,8 +39,7 @@ def flatten(t):
 
 
 def show_confusion_matrix(cf_matrix):
-    fig = plt.figure(figsize=(4, 4), dpi=70)
-    # cf_matrix = [[73,7],[7,141]]
+    plt.figure(figsize=(4, 4), dpi=70)
 
     group_names = ['True Neg', 'False Pos', 'False Neg', 'True Pos']
 
@@ -89,47 +63,21 @@ def show_confusion_matrix(cf_matrix):
     # Ticket labels - List must be in alphabetical order
     ax.xaxis.set_ticklabels(['False', 'True'])
     ax.yaxis.set_ticklabels(['False', 'True'])
+
     if not os.path.exists('./temp/'):
         os.makedirs('./temp/')
+
     plt.savefig('./temp/confusion_matrix.png')
     image = ImageTk.PhotoImage(Image.open("./temp/confusion_matrix.png"))
+
     result_img = Label(box_matrice_legende, image=image)
     result_img.image = image  # !!! It is necessary to keep a reference of the image, otherwise the image won't display
     result_img.grid(row=0, column=0, ipady=5)
-    # Display the visualization of the Confusion Matrix.
-    # plt.show()
 
-
-# def forward(image_number):
-#     global button_forward
-#     global button_back
-#     print(image_number)
-#     button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
-#     button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
-#
-#     if image_number == len(image_list)-1:
-#         button_forward = Button(root, text=">>", state=DISABLED)
-#     display_result_image(image_number)
-#
-#     button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
-#     button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
-#
-#
-# def back(image_number):
-#     global button_forward
-#     global button_back
-#     print(image_number)
-#     button_forward = Button(root, text=">>", command=lambda: forward(image_number + 1))
-#     button_back = Button(root, text="<<", command=lambda: back(image_number - 1))
-#
-#     if image_number == 0:
-#         button_back = Button(root, text="<<", state=DISABLED)
-#     display_result_image(image_number)
-#     button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
-#     button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
 
 def navigate_forward_back(image_number):
     global legende
+
     img = ImageTk.PhotoImage(Image.open("./GUI/legende.png").resize((150, 100), Image.ANTIALIAS))
     legende = Label(box_matrice_legende, image=img)
     legende.image = img
@@ -138,28 +86,25 @@ def navigate_forward_back(image_number):
     update_navigation_bar(image_number)
 
 
-# button_back = Button(root, text="<<", command=back, state=DISABLED)
-# button_exit = Button(root, text="Exit Program", command=root.quit)
-# button_forward = Button(root, text=">>", command=lambda: forward(1))
-#
-# button_back.grid(row=4, column=0,pady=(0,5),padx=(5,0))
-# button_exit.grid(row=4, column=2,pady=(0,5))
-# button_forward.grid(row=4, column=5,pady=(0,5),padx=(0,5))
 def update_navigation_bar(image_number):
     global button_forward
     global button_back
     global button_exit
+
     button_exit = Button(root, text="Exit Program", command=root.quit, font=('Arial', 10), background="red")
+
     if image_number == 0:
         button_back = Button(root, text="Previous", state=DISABLED, font=('Arial', 10))
     else:
         button_back = Button(root, text="Previous", command=lambda: navigate_forward_back(image_number - 1),
                              font=('Arial', 10), background="green")
+
     if image_number == len(image_list) - 1:
         button_forward = Button(root, text="Next", state=DISABLED, font=('Arial', 10))
     else:
         button_forward = Button(root, text="Next", command=lambda: navigate_forward_back(image_number + 1),
                                 font=('Arial', 10), background="green")
+
     button_back.grid(row=4, column=0, pady=(0, 5), padx=(5, 0))
     button_exit.grid(row=4, column=2, pady=(0, 5))
     button_forward.grid(row=4, column=5, pady=(0, 5), padx=(0, 5))
@@ -188,8 +133,7 @@ def display_data_results(image_number):
 
 def display_result_image(image_number):
     global result_img
-    # if(result_img != ""):
-    #     result_img.grid_forget()
+    
     result_img = Label(image=image_list[image_number]["image"])
     show_confusion_matrix(image_list[image_number]["confusion_matrix"])
     display_data_results(image_number)
@@ -198,9 +142,11 @@ def display_result_image(image_number):
     label_result.grid(row=0, column=3, pady=5)
     result_img.grid(row=1, column=3, pady=5)
 
+
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.quit()
+
 
 def show_visualization():
     global original_img
