@@ -12,7 +12,7 @@ LEGEND_SIZE = (150, 100)
 MATRIX_SIZE = (210, 190)
 
 root = Tk()
-root.title('Results visualization')
+root.title('Visualization of results')
 
 image_list = []
 result_img = ""
