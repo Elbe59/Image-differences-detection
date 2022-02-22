@@ -7,6 +7,10 @@ import seaborn as sns
 from PIL import ImageTk, Image
 from matplotlib import pyplot as plt
 
+IMG_SIZE = (525, 350) # (750, 500)
+LEGEND_SIZE = (150, 100)
+MATRIX_SIZE = (210, 190)
+
 root = Tk()
 root.title('Results visualization')
 
@@ -29,7 +33,7 @@ def add_original_image(adress):
     l'image de référence du dossier choisi.
     """
     global image_ref
-    image_ref = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
+    image_ref = ImageTk.PhotoImage(Image.open(adress).resize(IMG_SIZE, Image.ANTIALIAS))
 
 
 def add_results_image(adress: str, image_name: str, confusion_matrix, data_result):
@@ -41,7 +45,7 @@ def add_results_image(adress: str, image_name: str, confusion_matrix, data_resul
     Toutes ces données seront stockées dans un dictionnaire et toutes les images sont contenu dans une liste 'list_image'
     """
     global image_list
-    my_img = ImageTk.PhotoImage(Image.open(adress).resize((750, 500), Image.ANTIALIAS))
+    my_img = ImageTk.PhotoImage(Image.open(adress).resize(IMG_SIZE, Image.ANTIALIAS))
     image_list.append(
         {"adress": adress, "image_name": image_name, "image": my_img, "confusion_matrix": confusion_matrix,
          "accuracy": data_result[0], "recall": data_result[1], "precision": data_result[2], "f1_score": data_result[3]})
@@ -91,7 +95,7 @@ def show_confusion_matrix(cf_matrix):
         os.makedirs('./temp/')
 
     plt.savefig('./temp/confusion_matrix.png')
-    image = ImageTk.PhotoImage(Image.open("./temp/confusion_matrix.png"))
+    image = ImageTk.PhotoImage(Image.open("./temp/confusion_matrix.png").resize(MATRIX_SIZE, Image.ANTIALIAS))
 
     result_img = Label(box_matrice_legende, image=image)
     result_img.image = image  # !!! It is necessary to keep a reference of the image, otherwise the image won't display
@@ -106,12 +110,12 @@ def navigate_forward_back(image_number):
     """
     global legende
 
-    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize((150, 150), Image.ANTIALIAS))
+    img = ImageTk.PhotoImage(Image.open("./ressources/GUI/legende.png").resize(LEGEND_SIZE, Image.ANTIALIAS))
     box_legende = Label(box_matrice_legende)
     box_legende.grid(row=0, column=1, padx=(75, 0))
 
     legende = Label(box_legende, image=img)
-    text_legende = Label(box_legende, text="Legend \n", font=('Arial', 10))
+    text_legende = Label(box_legende, text="Legend : \n", font=('Arial', 15))
     text_legende.grid(row=0, column=0)
     legende.image = img
     legende.grid(row=1, column=0)
@@ -161,12 +165,12 @@ def display_data_results(image_number):
 
     box = Label(root, text="Results")
     box.grid(row=2, column=1, ipadx=0)
-    titre = Label(box, text="Results : \n", font=("Arial", 18))
-    accuracy = Label(box, text="Accuracy : " + str(accuracy) + "%", font=("Arial", 15))
+    titre = Label(box, text="Results : \n", font=("Arial", 15))
+    accuracy = Label(box, text="Accuracy : " + str(accuracy) + "%", font=("Arial", 12))
     # accuracy, recall, precision, f1_score
-    recall = Label(box, text="Recall : " + str(recall) + "%", font=("Arial", 15))
-    precision = Label(box, text="Precision : " + str(precision) + "%", font=("Arial", 15))
-    f1_score = Label(box, text="f1_score : " + str(f1_score) + "%", font=("Arial", 15))
+    recall = Label(box, text="Recall : " + str(recall) + "%", font=("Arial", 12))
+    precision = Label(box, text="Precision : " + str(precision) + "%", font=("Arial", 12))
+    f1_score = Label(box, text="f1_score : " + str(f1_score) + "%", font=("Arial", 12))
     titre.grid(row=0, column=0, ipadx=75)
     accuracy.grid(row=1, column=0, ipadx=75)
     recall.grid(row=2, column=0, ipadx=75)
@@ -185,7 +189,7 @@ def display_result_image(image_number):
     show_confusion_matrix(image_list[image_number]["confusion_matrix"])
     display_data_results(image_number)
     result_img.grid(row=1, column=3, pady=5)
-    label_result = Label(root, text="Result Image : " + image_list[image_number]["image_name"], font=("Arial", 10))
+    label_result = Label(root, text="Result Image : " + image_list[image_number]["image_name"], font=("Arial", 12))
     label_result.grid(row=0, column=3, pady=5)
     result_img.grid(row=1, column=3, pady=5)
 
@@ -209,7 +213,7 @@ def show_visualization():
 
     original_img = Label(image=image_ref)
     original_img.grid(row=1, column=1, pady=5)
-    label_original = Label(root, text="Original Image", font=("Arial", 10))
+    label_original = Label(root, text="Original Image", font=("Arial", 12))
     label_original.grid(row=0, column=1, pady=5)
 
     navigate_forward_back(0)

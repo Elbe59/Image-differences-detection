@@ -21,7 +21,8 @@ SEUIL_CROSSCORR = 0.8
 
 def img_load(repo):
     """
-    Description
+    Description :
+    Méthode pour le chargement des images concidérant le répertoire passé en paramètre.
     """
 
     img_list = {}
@@ -41,7 +42,9 @@ def img_load(repo):
 
 def labels_load(repo):
     """
-    Description
+    Description :
+    Méthode pour le chargement des labels et des coordonnées du masque du sol concidérant le répertoire passé en
+    paramètre.
     """
 
     repo = os.path.abspath(repo)
@@ -73,19 +76,26 @@ def labels_load(repo):
 
 def resize(coord):
     """
-    Description
+    Description :
+    Méthode permettant de diviser les valeurs des coordonnées des bounding boxes selon la constantes définie.
     """
 
     return math.floor(coord / RESIZE_FACTOR)
 
 
 def resize_up(coord):
+    """
+    Description :
+    Méthode permettant de multiplier les valeurs des coordonnées des bounding boxes par la constantes définie.
+    """
+
     return math.floor(coord * RESIZE_FACTOR)
 
 
 def save_results(repo, img_name, img):
     """
-    Description
+    Description :
+    Méthode pour sauvegarder les images obtenues dans une répertoire ./results
     """
 
     repo = os.path.abspath(repo)
@@ -102,7 +112,9 @@ def save_results(repo, img_name, img):
 
 def is_overlapping(bb1, bb2, seuil):
     """
-    Description
+    Description :
+    Méthode retournant la valeur True si deux bounding boxes bb1 et bb2 se superposent, False sinon. Le seuil permet de
+    définir une aire minimum d'overlapping.
     """
 
     return bops.box_iou(torch.tensor([bb1]), torch.tensor([bb2])).item() > seuil
@@ -110,7 +122,10 @@ def is_overlapping(bb1, bb2, seuil):
 
 def sort_overlapping_bb(bb_array):
     """
-    Description
+    Description :
+    Méthode permettant de trier les bounding boxes selon leur superposition. Si deux bounding boxes se superposent,
+    elles prennent toutes deux pour coordonnées le couple (x1, y1) minimum et (x2, y2) maximum. Les doublons sont
+    ensuite supprimés dans une deuxième boucle.
     """
 
     sorted_bb_array = []
@@ -130,9 +145,12 @@ def sort_overlapping_bb(bb_array):
     return sorted_bb_array
 
 
-def confusion_matrix(bb, lb, img):
+def analyze_bb(bb, lb, img):
     """
-    Description
+    Description :
+    Cette méthode permet de construire deux liste de booléens bb_count et lb_count. Un True dans bb_count signifie que
+    la bounding boxe de même indice dans bb est un TP, un False signifie qu'il s'agit d'un FP. Un False dans lb_count
+    signifie que le label de même indice dans lb est un FN.
     """
 
     bb_count = [False] * len(bb)
@@ -141,33 +159,34 @@ def confusion_matrix(bb, lb, img):
     is_visited = []
 
     for i in range(len(bb)):
-        for j in range(max(len(bb), len(lb))):
+        for j in range(len(lb)):
             if is_overlapping(bb[i], lb[j], SEUIL_IOU):
                 bb_count[i] = True
                 lb_count[j] = True
 
-                [x1, y1, x2, y2] = bb[i]
-                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), resize_up(2))
+    return bb_count, lb_count
 
-                is_visited.append(lb[j])
 
-    for label in lb:
-        if label not in is_visited:
-            [x1, y1, x2, y2] = label
-            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), resize_up(2))
+def confusion_matrix(bb_count, lb_count):
+    """
+    Description :
+    Cette méthode permet de calculer les nombres de TP, FP et FN à partir des listes bb_count et lb_count retournées
+    par la fonction précédente.
+    """
 
     tp = sum(bb_count)
     fp = len(bb_count) - sum(bb_count)
     fn = len(lb_count) - sum(lb_count)
-
-    nb_predict = tp + fp + fn
+    nb_predict = len(bb_count)
 
     return tp, fp, fn, nb_predict
 
 
 def calc_metrics(tp, fp, fn, nb_predict):
     """
-    Description
+    Description :
+    Calcule les principales métriques (accuracy, precision, recall, f1-score) à partir des nombres de TP, FP et FN ainsi
+    que du nombre de prédictions.
     """
 
     if nb_predict <= 0:
@@ -195,7 +214,10 @@ def calc_metrics(tp, fp, fn, nb_predict):
 
 def process(img, img_ref, floor_coord):
     """
-    Description
+    Description :
+    Il s'agit ici de la méthode la plus importante de notre programme. Elle permet de réaliser la segmentation
+    (ou binarisation) d'une image à l'aide de son image de référence. Les différentes étapes sont décrites en
+    commentaires.
     """
 
     # RGB -> GREY
@@ -226,7 +248,9 @@ def process(img, img_ref, floor_coord):
 
 def find_contours(thresh):
     """
-    Description
+    Description :
+    Cette méthode permet de tracer les contours (ou bounding boxes) à partir d'une image segmentée/binarisée. Les
+    bounding boxes de petites tailles sont exclues si elles ne dépassent pas un seuil (une aire) prédéfini.
     """
 
     contours = []
@@ -248,38 +272,55 @@ def find_contours(thresh):
 
 def main():
     """
-    Description
+    Description :
+    Il s'agit de la routine principale de notre programme regroupant l'ensemble des fonctions précédentes. Les étapes
+    sont mentionnées en commentaires.
     """
 
+    # parsing des arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("repo", help="The path of repository folder. Ex: ressources/Chambre/")
     args = parser.parse_args()
 
+    # loading des images, labels et de l'image de référence
     img_list, img_ref = img_load(os.path.abspath(args.repo))
-
     labels, floor_coord = labels_load(args.repo)
     viewer.add_original_image(args.repo + "Reference.JPG")
 
+    # boucle principale parcourant les images
     for img_name, img in img_list.items():
         img_ref_resized = cv2.resize(img_ref, DIM_IMG)
         img_resized = cv2.resize(img, DIM_IMG)
 
+        # binarisation et détection des contours
         thresh = process(img_ref_resized, img_resized, floor_coord)
         contours = find_contours(thresh)
+        bb_count, lb_count = analyze_bb(bb=contours, lb=labels[img_name], img=img)
 
-        for label in labels[img_name]:
-            [x1, y1, x2, y2] = label
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 165, 255), resize_up(1))
+        # affichage des FP
+        for i in range(len(lb_count)):
+            if not lb_count[i]:
+                [x1, y1, x2, y2] = labels[img_name][i]
+                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), resize_up(2))
 
-        for contour in contours:
-            [x1, y1, x2, y2] = contour
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), resize_up(2))
+        # affichage des TP
+        for j in range(len(bb_count)):
+            if bb_count[j]:
+                [x1, y1, x2, y2] = contours[j]
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), resize_up(2))
+        # affichage des FN
+            else:
+                [x1, y1, x2, y2] = contours[j]
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), resize_up(2))
 
-        tp, fp, fn, nb_predict = confusion_matrix(bb=contours, lb=labels[img_name], img=img)
+        # calculs de la matrice de confusion et des principales métriques
+        tp, fp, fn, nb_predict = confusion_matrix(bb_count, lb_count)
         accuracy, recall, precision, f1_score = calc_metrics(tp, fp, fn, nb_predict)
 
+        # sauvegarde des résultats
         dst = save_results(args.repo, img_name, img)
 
+        # affichage à l'aide de l'interface tkinter
         cf_matrix = [[0, fp], [fn, tp]]
         data_results = [int(accuracy * 100), int(recall * 100), int(precision * 100), int(f1_score * 100)]
         viewer.add_results_image(dst, img_name, cf_matrix, data_results)
