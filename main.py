@@ -22,7 +22,7 @@ SEUIL_CROSSCORR = 0.8
 def img_load(repo):
     """
     Description :
-    Méthode pour le chargement des images concidérant le répertoire passé en paramètre.
+    Méthode pour le chargement des images considérant le répertoire passé en paramètre.
     """
 
     img_list = {}
@@ -43,7 +43,7 @@ def img_load(repo):
 def labels_load(repo):
     """
     Description :
-    Méthode pour le chargement des labels et des coordonnées du masque du sol concidérant le répertoire passé en
+    Méthode pour le chargement des labels et des coordonnées du masque du sol considérant le répertoire passé en
     paramètre.
     """
 
@@ -77,7 +77,7 @@ def labels_load(repo):
 def resize(coord):
     """
     Description :
-    Méthode permettant de diviser les valeurs des coordonnées des bounding boxes selon la constantes définie.
+    Méthode permettant de diviser les valeurs des coordonnées des bounding boxes selon la constante définie.
     """
 
     return math.floor(coord / RESIZE_FACTOR)
@@ -86,7 +86,7 @@ def resize(coord):
 def resize_up(coord):
     """
     Description :
-    Méthode permettant de multiplier les valeurs des coordonnées des bounding boxes par la constantes définie.
+    Méthode permettant de multiplier les valeurs des coordonnées des bounding boxes par la constante définie.
     """
 
     return math.floor(coord * RESIZE_FACTOR)
@@ -95,7 +95,7 @@ def resize_up(coord):
 def save_results(repo, img_name, img):
     """
     Description :
-    Méthode pour sauvegarder les images obtenues dans une répertoire ./results
+    Méthode pour sauvegarder les images obtenues dans le répertoire ./results
     """
 
     repo = os.path.abspath(repo)
@@ -145,18 +145,16 @@ def sort_overlapping_bb(bb_array):
     return sorted_bb_array
 
 
-def analyze_bb(bb, lb, img):
+def analyze_bb(bb, lb):
     """
     Description :
-    Cette méthode permet de construire deux liste de booléens bb_count et lb_count. Un True dans bb_count signifie que
+    Cette méthode permet de construire deux listes de booléens bb_count et lb_count. Un True dans bb_count signifie que
     la bounding boxe de même indice dans bb est un TP, un False signifie qu'il s'agit d'un FP. Un False dans lb_count
     signifie que le label de même indice dans lb est un FN.
     """
 
     bb_count = [False] * len(bb)
     lb_count = [False] * len(lb)
-
-    is_visited = []
 
     for i in range(len(bb)):
         for j in range(len(lb)):
@@ -295,7 +293,7 @@ def main():
         # binarisation et détection des contours
         thresh = process(img_ref_resized, img_resized, floor_coord)
         contours = find_contours(thresh)
-        bb_count, lb_count = analyze_bb(bb=contours, lb=labels[img_name], img=img)
+        bb_count, lb_count = analyze_bb(bb=contours, lb=labels[img_name])
 
         # affichage des FP
         for i in range(len(lb_count)):
